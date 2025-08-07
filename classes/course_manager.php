@@ -22,7 +22,6 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace local_annualtrainingforecast;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -32,7 +31,7 @@ require_once($CFG->dirroot . '/course/lib.php');
  * Course manager class
  */
 class course_manager {
-    
+
     /**
      * Get or create the Annual Training category
      *
@@ -40,10 +39,10 @@ class course_manager {
      */
     public static function get_annual_training_category() {
         global $DB;
-        
+
         // Check if the Annual Training category exists
         $category = $DB->get_record('course_categories', ['name' => 'Annual Training']);
-        
+
         if (!$category) {
             // Create the category if it doesn't exist
             $data = new \stdClass();
@@ -52,15 +51,15 @@ class course_manager {
             $data->descriptionformat = FORMAT_HTML;
             $data->parent = 0; // Top level category
             $data->visible = 1;
-            
+
             // Use core_course_category for Moodle 4+
             $category = \core_course_category::create($data);
             return $category->id;
         }
-        
+
         return $category->id;
     }
-    
+
     /**
      * Create a new Moodle course for a parent course
      *
@@ -69,10 +68,10 @@ class course_manager {
      */
     public static function create_parent_course($data) {
         global $CFG, $DB;
-        
+
         // Get the Annual Training category
         $categoryid = self::get_annual_training_category();
-        
+
         // Prepare course data
         $coursedata = new \stdClass();
         $coursedata->fullname = $data->name;
@@ -85,13 +84,13 @@ class course_manager {
         $coursedata->enddate = strtotime('+' . $data->duration . ' days', time());
         $coursedata->timecreated = time();
         $coursedata->timemodified = time();
-        
+
         // Create the course
         $course = create_course($coursedata);
-        
+
         return $course->id;
     }
-    
+
     /**
      * Create a new Moodle course for a course instance by cloning the parent course
      *
@@ -101,13 +100,13 @@ class course_manager {
      */
     public static function create_course_instance($data, $parentcourseid) {
         global $CFG, $DB, $USER;
-        
+
         // Get the parent course
         $parentcourse = $DB->get_record('course', ['id' => $parentcourseid], '*', MUST_EXIST);
-        
+
         // Get the Annual Training category
         $categoryid = self::get_annual_training_category();
-        
+
         // Create a new course with basic settings
         $coursedata = new \stdClass();
         $coursedata->fullname = $data->name;
@@ -121,34 +120,34 @@ class course_manager {
         $coursedata->format = $parentcourse->format;
         $coursedata->timecreated = time();
         $coursedata->timemodified = time();
-        
+
         // Create the course
         $newcourse = create_course($coursedata);
-        
+
         // Now copy content from the parent course
         self::copy_course_content($parentcourseid, $newcourse->id);
-        
+
         return $newcourse->id;
     }
-    
+
     /**
      * Copy content from one course to another
-     * 
+     *
      * @param int $fromcourseid Source course ID
      * @param int $tocourseid Destination course ID
      * @return bool Success status
      */
     private static function copy_course_content($fromcourseid, $tocourseid) {
         global $CFG, $USER, $DB;
-        
+
         try {
             // Get source and destination courses
             $fromcourse = $DB->get_record('course', ['id' => $fromcourseid], '*', MUST_EXIST);
             $tocourse = $DB->get_record('course', ['id' => $tocourseid], '*', MUST_EXIST);
-            
+
             // Log what we're doing
             debugging("Copying content from course ID {$fromcourseid} to course ID {$tocourseid}", DEBUG_DEVELOPER);
-            
+
             // First approach: Try using backup and restore
             debugging("Using backup and restore approach", DEBUG_DEVELOPER);
             $result = self::backup_restore_course($fromcourseid, $tocourseid);
@@ -156,7 +155,7 @@ class course_manager {
                 debugging("Successfully copied content using backup and restore", DEBUG_DEVELOPER);
                 return true;
             }
-            
+
             // Second approach: Direct SQL copy as last resort
             debugging("Using direct SQL copy approach", DEBUG_DEVELOPER);
             $result = self::direct_copy_course_modules($fromcourseid, $tocourseid);
@@ -164,34 +163,34 @@ class course_manager {
                 debugging("Successfully copied content using direct SQL", DEBUG_DEVELOPER);
                 return true;
             }
-            
+
             // If we got here, none of the methods worked
             debugging("All course content copy methods failed", DEBUG_DEVELOPER);
             return false;
-            
+
         } catch (\Exception $e) {
             debugging('Course content copy error: ' . $e->getMessage() . "\n" . $e->getTraceAsString(), DEBUG_DEVELOPER);
             return false;
         }
     }
-    
+
     /**
      * Copy course content using backup and restore
-     * 
+     *
      * @param int $fromcourseid Source course ID
      * @param int $tocourseid Destination course ID
      * @return bool Success status
      */
     private static function backup_restore_course($fromcourseid, $tocourseid) {
         global $CFG, $USER;
-        
+
         require_once($CFG->dirroot . '/backup/util/includes/backup_includes.php');
         require_once($CFG->dirroot . '/backup/util/includes/restore_includes.php');
-        
+
         try {
             // Create a backup of the source course
             debugging("Creating backup of course {$fromcourseid}", DEBUG_DEVELOPER);
-            
+
             // Prepare unique filename
             $backupbasepath = $CFG->tempdir . '/backup/';
             if (!file_exists($backupbasepath)) {
@@ -199,7 +198,7 @@ class course_manager {
             }
             $backupfilename = 'backup_' . time() . '_' . random_string(10) . '.mbz';
             $backupfilepath = $backupbasepath . $backupfilename;
-            
+
             // Create the backup
             $bc = new \backup_controller(
                 \backup::TYPE_1COURSE,
@@ -209,10 +208,10 @@ class course_manager {
                 \backup::MODE_GENERAL,
                 $USER->id
             );
-            
+
             // Configure the backup settings
             $plan = $bc->get_plan();
-            
+
             // Set the plan to include everything except users
             if ($plan->setting_exists('users')) {
                 $plan->get_setting('users')->set_value(false);
@@ -259,21 +258,21 @@ class course_manager {
             if ($plan->setting_exists('competencies')) {
                 $plan->get_setting('competencies')->set_value(false);
             }
-            
+
             // Execute the backup
             $bc->execute_plan();
-            
+
             // Get the backup file
             $results = $bc->get_results();
             $file = $results['backup_destination'];
-            
+
             // Save the backup file to the filesystem
             debugging("Saving backup file to {$backupfilepath}", DEBUG_DEVELOPER);
             $file->copy_content_to($backupfilepath);
-            
+
             // Clean up the backup controller
             $bc->destroy();
-            
+
             // Now restore to the destination course
             debugging("Restoring backup to course {$tocourseid}", DEBUG_DEVELOPER);
             $rc = new \restore_controller(
@@ -284,15 +283,15 @@ class course_manager {
                 $USER->id,
                 \backup::TARGET_EXISTING_ADDING
             );
-            
+
             // Check if the restore is possible
             if ($rc->get_status() == \backup::STATUS_REQUIRE_CONV) {
                 $rc->convert();
             }
-            
+
             // Configure the restore settings
             $plan = $rc->get_plan();
-            
+
             // Set the plan to include everything except users
             if ($plan->setting_exists('users')) {
                 $plan->get_setting('users')->set_value(false);
@@ -333,7 +332,7 @@ class course_manager {
             if ($plan->setting_exists('competencies')) {
                 $plan->get_setting('competencies')->set_value(false);
             }
-            
+
             // Execute precheck
             if (!$rc->execute_precheck()) {
                 $precheckresults = $rc->get_precheck_results();
@@ -342,28 +341,28 @@ class course_manager {
                         debugging('Restore precheck error: ' . $error, DEBUG_DEVELOPER);
                     }
                 }
-                
+
                 $rc->destroy();
                 if (file_exists($backupfilepath)) {
                     unlink($backupfilepath);
                 }
                 return false;
             }
-            
+
             // Execute the restore
             $rc->execute_plan();
-            
+
             // Clean up the restore controller
             $rc->destroy();
-            
+
             // Delete the temporary backup file
             if (file_exists($backupfilepath)) {
                 unlink($backupfilepath);
             }
-            
+
             // Rebuild course cache
             rebuild_course_cache($tocourseid);
-            
+
             return true;
         } catch (\Exception $e) {
             debugging('Backup/restore error: ' . $e->getMessage() . "\n" . $e->getTraceAsString(), DEBUG_DEVELOPER);
@@ -374,34 +373,34 @@ class course_manager {
             return false;
         }
     }
-    
+
     /**
      * Direct copy of course modules from one course to another using SQL
      * This is a last resort method when other methods fail
-     * 
+     *
      * @param int $fromcourseid Source course ID
      * @param int $tocourseid Destination course ID
      * @return bool Success status
      */
     private static function direct_copy_course_modules($fromcourseid, $tocourseid) {
         global $DB;
-        
+
         debugging("Performing direct SQL copy of modules from course {$fromcourseid} to {$tocourseid}", DEBUG_DEVELOPER);
-        
+
         // Start a transaction to ensure data integrity
         $transaction = $DB->start_delegated_transaction();
-        
+
         try {
             // Get all sections from source course
             $fromsections = $DB->get_records('course_sections', ['course' => $fromcourseid], 'section ASC');
             $tosections = $DB->get_records('course_sections', ['course' => $tocourseid], 'section ASC');
-            
+
             // Create a mapping of section numbers to IDs for the destination course
             $sectionmap = [];
             foreach ($tosections as $section) {
                 $sectionmap[$section->section] = $section->id;
             }
-            
+
             // Create any missing sections in the destination course
             foreach ($fromsections as $section) {
                 if (!isset($sectionmap[$section->section])) {
@@ -415,57 +414,57 @@ class course_manager {
                     $newsection->visible = $section->visible;
                     $newsection->availability = $section->availability;
                     $newsection->timemodified = time();
-                    
+
                     $sectionid = $DB->insert_record('course_sections', $newsection);
                     $sectionmap[$section->section] = $sectionid;
                     debugging("Created missing section {$section->section} with ID {$sectionid}", DEBUG_DEVELOPER);
                 }
             }
-            
+
             // Create a mapping of old module IDs to new module IDs
             $modulemap = [];
-            
+
             // Create a mapping of section IDs to their sequence arrays
             $sectionsequences = [];
             foreach ($sectionmap as $sectionnum => $sectionid) {
                 $sectionsequences[$sectionid] = [];
             }
-            
+
             // Get all modules from source course, ordered by section and sequence
             $sql = "SELECT cm.*, cs.section as sectionnum, cs.sequence
                     FROM {course_modules} cm
                     JOIN {course_sections} cs ON cm.section = cs.id
                     WHERE cm.course = :courseid
                     ORDER BY cs.section, FIND_IN_SET(cm.id, cs.sequence)";
-            
+
             $modules = $DB->get_records_sql($sql, ['courseid' => $fromcourseid]);
             debugging("Found " . count($modules) . " modules to copy", DEBUG_DEVELOPER);
-            
+
             // Process modules in the correct order
             foreach ($modules as $module) {
                 // Get the module type
                 $moduletype = $DB->get_field('modules', 'name', ['id' => $module->module]);
                 debugging("Copying {$moduletype} module with ID {$module->id}", DEBUG_DEVELOPER);
-                
+
                 // Get the module instance
                 $moduledata = $DB->get_record($moduletype, ['id' => $module->instance]);
-                
+
                 if (!$moduledata) {
                     debugging("Could not find {$moduletype} instance with ID {$module->instance}", DEBUG_DEVELOPER);
                     continue;
                 }
-                
+
                 // Create a copy of the module instance
                 unset($moduledata->id);
                 $moduledata->course = $tocourseid;
                 $moduledata->timemodified = time();
-                
+
                 $newinstanceid = $DB->insert_record($moduletype, $moduledata);
                 debugging("Created new {$moduletype} instance with ID {$newinstanceid}", DEBUG_DEVELOPER);
-                
+
                 // Get the destination section ID
                 $newsectionid = $sectionmap[$module->sectionnum] ?? reset($sectionmap);
-                
+
                 // Create a copy of the course module
                 $newmodule = new \stdClass();
                 $newmodule->course = $tocourseid;
@@ -487,17 +486,17 @@ class course_manager {
                 $newmodule->completionexpected = $module->completionexpected;
                 $newmodule->showdescription = $module->showdescription;
                 $newmodule->availability = $module->availability;
-                
+
                 $newmoduleid = $DB->insert_record('course_modules', $newmodule);
                 debugging("Created new course module with ID {$newmoduleid}", DEBUG_DEVELOPER);
-                
+
                 // Store the mapping of old module ID to new module ID
                 $modulemap[$module->id] = $newmoduleid;
-                
+
                 // Add the new module ID to the appropriate section sequence
                 $sectionsequences[$newsectionid][] = $newmoduleid;
             }
-            
+
             // Update all section sequences
             foreach ($sectionsequences as $sectionid => $sequence) {
                 if (!empty($sequence)) {
@@ -506,13 +505,13 @@ class course_manager {
                     debugging("Updated section {$sectionid} sequence to: {$sequencestr}", DEBUG_DEVELOPER);
                 }
             }
-            
+
             // Commit the transaction
             $transaction->allow_commit();
-            
+
             // Rebuild course cache
             rebuild_course_cache($tocourseid);
-            
+
             return true;
         } catch (\Exception $e) {
             // Rollback the transaction
@@ -521,7 +520,7 @@ class course_manager {
             return false;
         }
     }
-    
+
     /**
      * Get the Moodle course ID associated with a parent course
      *
@@ -530,16 +529,16 @@ class course_manager {
      */
     public static function get_moodle_course_id_for_parent($parentid) {
         global $DB;
-        
+
         $record = $DB->get_record('local_atf_courses', ['id' => $parentid], 'moodlecourseid');
-        
+
         if ($record && !empty($record->moodlecourseid)) {
             return $record->moodlecourseid;
         }
-        
+
         return false;
     }
-    
+
     /**
      * Get the Moodle course ID associated with a course instance
      *
@@ -548,13 +547,13 @@ class course_manager {
      */
     public static function get_moodle_course_id_for_iteration($iterationid) {
         global $DB;
-        
+
         $record = $DB->get_record('local_atf_iterations', ['id' => $iterationid], 'moodlecourseid');
-        
+
         if ($record && !empty($record->moodlecourseid)) {
             return $record->moodlecourseid;
         }
-        
+
         return false;
     }
 }

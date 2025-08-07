@@ -22,7 +22,6 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace local_annualtrainingforecast;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -38,12 +37,12 @@ class api {
      */
     public static function get_gantt_data($viewtype = 'year') {
         global $DB;
-        
+
         // Determine date range based on view type
         $now = time();
         $startdate = $now;
         $enddate = $now;
-        
+
         switch ($viewtype) {
             case 'year':
                 // Start from beginning of current year
@@ -79,7 +78,7 @@ class api {
                 }
                 break;
         }
-        
+
         // Get all iterations within the date range
         $sql = "SELECT i.*, c.name as parentname, mc.startdate as moodle_startdate, mc.enddate as moodle_enddate
                 FROM {local_atf_iterations} i
@@ -89,7 +88,7 @@ class api {
                    OR (i.enddate BETWEEN :startdate2 AND :enddate2)
                    OR (i.startdate <= :startdate3 AND i.enddate >= :enddate3)
                 ORDER BY i.startdate ASC";
-        
+
         $params = [
             'startdate1' => $startdate,
             'enddate1' => $enddate,
@@ -98,9 +97,9 @@ class api {
             'startdate3' => $startdate,
             'enddate3' => $enddate
         ];
-        
+
         $iterations = $DB->get_records_sql($sql, $params);
-        
+
         // Format data for Gantt chart
         $result = [
             'timerange' => [
@@ -109,7 +108,7 @@ class api {
             ],
             'items' => []
         ];
-        
+
         foreach ($iterations as $iteration) {
             $statusclasses = [
                 0 => 'upcoming',
@@ -117,11 +116,11 @@ class api {
                 2 => 'completed',
                 3 => 'cancelled'
             ];
-            
+
             // Use Moodle course dates if available, otherwise use the ones from our table
             $itemStartDate = !empty($iteration->moodle_startdate) ? $iteration->moodle_startdate : $iteration->startdate;
             $itemEndDate = !empty($iteration->moodle_enddate) ? $iteration->moodle_enddate : $iteration->enddate;
-            
+
             // If end date is not set or is before start date, calculate it based on start date and duration
             if (empty($itemEndDate) || $itemEndDate <= $itemStartDate) {
                 // Get parent course to get duration
@@ -144,18 +143,18 @@ class api {
             // Normalize dates to start/end of day for consistent calculations
             $itemStartDate = strtotime(date('Y-m-d 00:00:00', $itemStartDate));
             $itemEndDate = strtotime(date('Y-m-d 23:59:59', $itemEndDate));
-            
+
             // Ensure dates are valid
             if (empty($itemStartDate)) {
                 $itemStartDate = time();
                 $itemStartDate = strtotime(date('Y-m-d 00:00:00', $itemStartDate));
             }
-            
+
             if (empty($itemEndDate) || $itemEndDate < $itemStartDate) {
                 $itemEndDate = $itemStartDate;
                 $itemEndDate = strtotime(date('Y-m-d 23:59:59', $itemEndDate));
             }
-            
+
             // Update the iteration record with the correct dates if they've changed
             if ($itemStartDate != $iteration->startdate || $itemEndDate != $iteration->enddate) {
                 $updateRecord = new \stdClass();
@@ -164,16 +163,16 @@ class api {
                 $updateRecord->enddate = $itemEndDate;
                 $updateRecord->timemodified = time();
                 $DB->update_record('local_atf_iterations', $updateRecord);
-                
+
                 // Update the iteration object for use in this function
                 $iteration->startdate = $itemStartDate;
                 $iteration->enddate = $itemEndDate;
             }
-            
+
             // Ensure the item is within the view range
             $visibleStartDate = max($startdate, $itemStartDate);
             $visibleEndDate = min($enddate, $itemEndDate);
-            
+
             // Only add the item if it's at least partially visible in the current view
             if ($visibleEndDate >= $visibleStartDate) {
                 $result['items'][] = [
@@ -189,10 +188,10 @@ class api {
                 ];
             }
         }
-        
+
         return $result;
     }
-    
+
     /**
      * Update iteration status
      *
@@ -203,17 +202,17 @@ class api {
      */
     public static function update_iteration_status($id, $status, $completed) {
         global $DB, $USER;
-        
+
         $iteration = $DB->get_record('local_atf_iterations', ['id' => $id], '*', MUST_EXIST);
-        
+
         $iteration->status = $status;
         $iteration->completed = $completed;
         $iteration->timemodified = time();
         $iteration->modifiedby = $USER->id;
-        
+
         return $DB->update_record('local_atf_iterations', $iteration);
     }
-    
+
     /**
      * Export Gantt data to Excel
      *
@@ -223,13 +222,13 @@ class api {
     public static function export_to_excel($viewtype) {
         global $CFG;
         require_once($CFG->libdir . '/excellib.class.php');
-        
+
         $data = self::get_gantt_data($viewtype);
-        
+
         // Create workbook
         $workbook = new \MoodleExcelWorkbook('training_forecast_' . $viewtype . '_' . date('Y-m-d'));
         $worksheet = $workbook->add_worksheet(get_string('pluginname', 'local_annualtrainingforecast'));
-        
+
         // Add headers
         $headers = [
             get_string('coursename', 'local_annualtrainingforecast'),
@@ -239,13 +238,13 @@ class api {
             get_string('status', 'local_annualtrainingforecast'),
             get_string('completed', 'local_annualtrainingforecast')
         ];
-        
+
         $col = 0;
         foreach ($headers as $header) {
             $worksheet->write(0, $col, $header);
             $col++;
         }
-        
+
         // Add data
         $row = 1;
         foreach ($data['items'] as $item) {
@@ -255,21 +254,21 @@ class api {
                 2 => get_string('status_completed', 'local_annualtrainingforecast'),
                 3 => get_string('status_cancelled', 'local_annualtrainingforecast')
             ];
-            
-            $completedtext = $item['completed'] ? 
-                get_string('completed', 'local_annualtrainingforecast') : 
+
+            $completedtext = $item['completed'] ?
+                get_string('completed', 'local_annualtrainingforecast') :
                 get_string('notcompleted', 'local_annualtrainingforecast');
-            
+
             $worksheet->write($row, 0, $item['name']);
             $worksheet->write($row, 1, $item['parentname']);
             $worksheet->write($row, 2, userdate($item['start'], get_string('strftimedatefullshort', 'core_langconfig')));
             $worksheet->write($row, 3, userdate($item['end'], get_string('strftimedatefullshort', 'core_langconfig')));
             $worksheet->write($row, 4, $statusstrings[$item['status']]);
             $worksheet->write($row, 5, $completedtext);
-            
+
             $row++;
         }
-        
+
         // Close workbook and return path
         $workbook->close();
         return $workbook->get_filepath();

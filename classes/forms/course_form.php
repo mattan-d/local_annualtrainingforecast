@@ -22,7 +22,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace local_annualtrainingforecast\forms;
+namespace forms;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -37,7 +37,7 @@ class course_form extends \moodleform {
      */
     public function definition() {
         global $CFG, $DB;
-        
+
         $mform = $this->_form;
         $course = $this->_customdata['course'] ?? null;
         $action = $this->_customdata['action'] ?? 'add';
@@ -47,33 +47,33 @@ class course_form extends \moodleform {
             'new' => get_string('createnewcourse', 'local_annualtrainingforecast'),
             'existing' => get_string('selectexistingcourse', 'local_annualtrainingforecast')
         ];
-        
+
         $mform->addElement('header', 'coursesourcehdr', get_string('coursesource', 'local_annualtrainingforecast'));
         $mform->addElement('select', 'coursesource', get_string('coursesource', 'local_annualtrainingforecast'), $courseOptions);
         $mform->setDefault('coursesource', 'new');
-        
+
         // New course section
         $mform->addElement('header', 'newcoursehdr', get_string('newcoursedetails', 'local_annualtrainingforecast'));
-        
+
         // Course name
-        $mform->addElement('text', 'name', get_string('coursename', 'local_annualtrainingforecast'), 
+        $mform->addElement('text', 'name', get_string('coursename', 'local_annualtrainingforecast'),
             ['size' => '64', 'maxlength' => 255]);
         $mform->setType('name', PARAM_TEXT);
-        
+
         // Description - using a simple textarea instead of editor to avoid complexity
-        $mform->addElement('textarea', 'description', get_string('coursedescription', 'local_annualtrainingforecast'), 
+        $mform->addElement('textarea', 'description', get_string('coursedescription', 'local_annualtrainingforecast'),
             ['rows' => 10, 'cols' => 60]);
         $mform->setType('description', PARAM_TEXT);
-        
+
         // Duration
         $mform->addElement('text', 'duration', get_string('courseduration', 'local_annualtrainingforecast'));
         $mform->setType('duration', PARAM_INT);
         $mform->setDefault('duration', 1);
         $mform->addHelpButton('duration', 'courseduration', 'local_annualtrainingforecast');
-        
+
         // Existing course section
         $mform->addElement('header', 'existingcoursehdr', get_string('existingcoursedetails', 'local_annualtrainingforecast'));
-        
+
         // Get all available courses
         $courses = $DB->get_records_sql(
             "SELECT c.id, c.fullname, c.shortname, cc.name as categoryname
@@ -83,36 +83,36 @@ class course_form extends \moodleform {
              ORDER BY cc.name, c.fullname",
             ['siteid' => SITEID]
         );
-        
+
         $courseOptions = ['' => get_string('choosedots')];
         foreach ($courses as $c) {
             $courseOptions[$c->id] = $c->categoryname . ' / ' . $c->fullname . ' (' . $c->shortname . ')';
         }
-        
+
         $mform->addElement('select', 'existingcourseid', get_string('selectcourse', 'local_annualtrainingforecast'), $courseOptions);
-        
+
         // Duration for existing course
         $mform->addElement('text', 'existing_duration', get_string('courseduration', 'local_annualtrainingforecast'));
         $mform->setType('existing_duration', PARAM_INT);
         $mform->setDefault('existing_duration', 1);
         $mform->addHelpButton('existing_duration', 'courseduration', 'local_annualtrainingforecast');
-        
+
         // Hidden fields
         if (!empty($course)) {
             $mform->addElement('hidden', 'id', $course->id);
             $mform->setType('id', PARAM_INT);
         }
-        
+
         // Add hidden fields for action and type
         $mform->addElement('hidden', 'action', $action);
         $mform->setType('action', PARAM_ALPHA);
-        
+
         $mform->addElement('hidden', 'type', 'course');
         $mform->setType('type', PARAM_ALPHA);
-        
+
         // Action buttons
         $this->add_action_buttons();
-        
+
         // Set default data
         if (!empty($course)) {
             $data = [
@@ -120,7 +120,7 @@ class course_form extends \moodleform {
                 'description' => $course->description,
                 'duration' => $course->duration
             ];
-            
+
             // If this is an existing Moodle course
             if (!empty($course->moodlecourseid)) {
                 $existingcourse = $DB->get_record('course', ['id' => $course->moodlecourseid]);
@@ -134,20 +134,20 @@ class course_form extends \moodleform {
                     $data['coursesource'] = 'new';
                 }
             }
-            
+
             $this->set_data($data);
         }
-        
+
         // JavaScript to handle form sections
         $this->add_form_javascript();
     }
-    
+
     /**
      * Add JavaScript for form behavior
      */
     private function add_form_javascript() {
         global $PAGE;
-        
+
         $js = "
         require(['jquery'], function($) {
             function toggleCourseSections() {
@@ -185,7 +185,7 @@ class course_form extends \moodleform {
             });
         });
         ";
-        
+
         $PAGE->requires->js_amd_inline($js);
     }
 
@@ -198,14 +198,14 @@ class course_form extends \moodleform {
      */
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
-        
+
         // Only validate fields based on the selected course source
         if (isset($data['coursesource']) && $data['coursesource'] === 'new') {
             // Validate new course fields only
             if (empty($data['name'])) {
                 $errors['name'] = get_string('required');
             }
-            
+
             if (empty($data['duration']) || !is_numeric($data['duration']) || $data['duration'] <= 0) {
                 $errors['duration'] = get_string('required');
             }
@@ -214,12 +214,12 @@ class course_form extends \moodleform {
             if (empty($data['existingcourseid'])) {
                 $errors['existingcourseid'] = get_string('required');
             }
-            
+
             if (empty($data['existing_duration']) || !is_numeric($data['existing_duration']) || $data['existing_duration'] <= 0) {
                 $errors['existing_duration'] = get_string('required');
             }
         }
-        
+
         return $errors;
     }
 }

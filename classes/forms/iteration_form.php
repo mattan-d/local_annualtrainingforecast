@@ -22,7 +22,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace local_annualtrainingforecast\forms;
+namespace forms;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -37,42 +37,42 @@ class iteration_form extends \moodleform {
      */
     public function definition() {
         global $CFG, $DB;
-        
+
         $mform = $this->_form;
         $iteration = $this->_customdata['iteration'];
         $parentid = $this->_customdata['parentid'];
-        
+
         // Get parent course
         $parentcourse = $DB->get_record('local_atf_courses', ['id' => $parentid], '*', MUST_EXIST);
-        
+
         // Parent course (display only)
-        $mform->addElement('static', 'parentcourse', get_string('parentcourse', 'local_annualtrainingforecast'), 
+        $mform->addElement('static', 'parentcourse', get_string('parentcourse', 'local_annualtrainingforecast'),
             format_string($parentcourse->name));
-        
+
         // Iteration name
-        $mform->addElement('text', 'name', get_string('coursename', 'local_annualtrainingforecast'), 
+        $mform->addElement('text', 'name', get_string('coursename', 'local_annualtrainingforecast'),
             ['size' => '64', 'maxlength' => 255]);
         $mform->setType('name', PARAM_TEXT);
         $mform->addRule('name', get_string('required'), 'required', null, 'client');
-        
+
         // If new iteration, set default name based on parent course
         if (empty($iteration)) {
             $mform->setDefault('name', $parentcourse->name);
         }
-        
+
         // Start date
         $mform->addElement('date_selector', 'startdate', get_string('startdate', 'local_annualtrainingforecast'));
         $mform->addRule('startdate', get_string('required'), 'required', null, 'client');
-        
+
         // End date
         $mform->addElement('date_selector', 'enddate', get_string('enddate', 'local_annualtrainingforecast'));
         $mform->addRule('enddate', get_string('required'), 'required', null, 'client');
-        
+
         // If new iteration and parent course has duration, calculate end date
         if (empty($iteration) && !empty($parentcourse->duration)) {
             $mform->setDefault('enddate', strtotime('+' . $parentcourse->duration . ' days', time()));
         }
-        
+
         // Status
         $statusoptions = [
             0 => get_string('status_upcoming', 'local_annualtrainingforecast'),
@@ -82,7 +82,7 @@ class iteration_form extends \moodleform {
         ];
         $mform->addElement('select', 'status', get_string('status', 'local_annualtrainingforecast'), $statusoptions);
         $mform->setDefault('status', 0);
-        
+
         // Completed
         $completedoptions = [
             0 => get_string('notcompleted', 'local_annualtrainingforecast'),
@@ -90,26 +90,26 @@ class iteration_form extends \moodleform {
         ];
         $mform->addElement('select', 'completed', get_string('completed', 'local_annualtrainingforecast'), $completedoptions);
         $mform->setDefault('completed', 0);
-        
+
         // Hidden fields
         if (!empty($iteration)) {
             $mform->addElement('hidden', 'id', $iteration->id);
             $mform->setType('id', PARAM_INT);
         }
-        
+
         $mform->addElement('hidden', 'parentid', $parentid);
         $mform->setType('parentid', PARAM_INT);
-        
+
         // Add hidden fields for action and type
         $mform->addElement('hidden', 'action', $this->_customdata['action'] ?? 'add');
         $mform->setType('action', PARAM_ALPHA);
-        
+
         $mform->addElement('hidden', 'type', 'iteration');
         $mform->setType('type', PARAM_ALPHA);
-        
+
         // Action buttons
         $this->add_action_buttons();
-        
+
         // Set default data
         if (!empty($iteration)) {
             $data = [
@@ -119,11 +119,11 @@ class iteration_form extends \moodleform {
                 'status' => $iteration->status,
                 'completed' => $iteration->completed
             ];
-            
+
             $this->set_data($data);
         }
     }
-    
+
     /**
      * Validation
      *
@@ -133,15 +133,15 @@ class iteration_form extends \moodleform {
      */
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
-        
+
         if (empty($data['name'])) {
             $errors['name'] = get_string('required');
         }
-        
+
         if ($data['enddate'] < $data['startdate']) {
             $errors['enddate'] = get_string('enddatebeforestartdate', 'local_annualtrainingforecast');
         }
-        
+
         return $errors;
     }
 }

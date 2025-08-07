@@ -31,7 +31,7 @@ require_once($CFG->dirroot . '/local/annualtrainingforecast/classes/api.php');
  * External API class
  */
 class local_annualtrainingforecast_external extends external_api {
-   
+
     /**
      * Get Gantt data parameters
      *
@@ -42,7 +42,7 @@ class local_annualtrainingforecast_external extends external_api {
             'viewtype' => new external_value(PARAM_ALPHA, 'View type (year, halfyear, quarter)', VALUE_DEFAULT, 'year')
         ]);
     }
-    
+
     /**
      * Get Gantt data
      *
@@ -51,23 +51,23 @@ class local_annualtrainingforecast_external extends external_api {
      */
     public static function get_gantt_data($viewtype = 'year') {
         global $USER;
-        
+
         // Parameter validation
         $params = self::validate_parameters(self::get_gantt_data_parameters(), [
             'viewtype' => $viewtype
         ]);
-        
+
         // Context validation
         $context = context_system::instance();
         self::validate_context($context);
         require_capability('local/annualtrainingforecast:viewforecast', $context);
-        
+
         // Get data
-        $data = \local_annualtrainingforecast\api::get_gantt_data($params['viewtype']);
-        
+        $data = \api::get_gantt_data($params['viewtype']);
+
         return $data;
     }
-    
+
     /**
      * Get Gantt data return definition
      *
@@ -94,7 +94,7 @@ class local_annualtrainingforecast_external extends external_api {
             )
         ]);
     }
-    
+
     /**
      * Update iteration status parameters
      *
@@ -107,7 +107,7 @@ class local_annualtrainingforecast_external extends external_api {
             'completed' => new external_value(PARAM_INT, 'Completion status')
         ]);
     }
-    
+
     /**
      * Update iteration status
      *
@@ -118,32 +118,32 @@ class local_annualtrainingforecast_external extends external_api {
      */
     public static function update_iteration_status($id, $status, $completed) {
         global $USER;
-        
+
         // Parameter validation
         $params = self::validate_parameters(self::update_iteration_status_parameters(), [
             'id' => $id,
             'status' => $status,
             'completed' => $completed
         ]);
-        
+
         // Context validation
         $context = context_system::instance();
         self::validate_context($context);
         require_capability('local/annualtrainingforecast:updatestatus', $context);
-        
+
         // Update status
-        $result = \local_annualtrainingforecast\api::update_iteration_status(
+        $result = \api::update_iteration_status(
             $params['id'],
             $params['status'],
             $params['completed']
         );
-        
+
         return [
             'success' => $result,
             'message' => $result ? '' : get_string('updatefailed', 'local_annualtrainingforecast')
         ];
     }
-    
+
     /**
      * Update iteration status return definition
      *

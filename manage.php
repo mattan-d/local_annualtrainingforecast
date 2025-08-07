@@ -64,31 +64,31 @@ if ($action == 'add' || $action == 'edit') {
             global $DB;
             $course = $DB->get_record('local_atf_courses', ['id' => $id], '*', MUST_EXIST);
         }
-        
-        $form = new \local_annualtrainingforecast\forms\course_form(null, [
+
+        $form = new forms\course_form(null, [
             'course' => $course,
             'action' => $action
         ]);
-        
+
         if ($form->is_cancelled()) {
             redirect(new moodle_url('/local/annualtrainingforecast/manage.php'));
         } else if ($data = $form->get_data()) {
             global $DB, $USER;
-            
+
             $now = time();
-            
+
             if ($action == 'edit' && $id) {
                 // Update existing course
                 $record = new stdClass();
                 $record->id = $id;
-                
+
                 if ($data->coursesource === 'new') {
                     $record->name = $data->name;
                     $record->description = $data->description;
                     $record->duration = $data->duration;
-                    
+
                     // Update the Moodle course if it exists
-                    $moodlecourseid = \local_annualtrainingforecast\course_manager::get_moodle_course_id_for_parent($id);
+                    $moodlecourseid = \course_manager::get_moodle_course_id_for_parent($id);
                     if ($moodlecourseid) {
                         $moodlecourse = $DB->get_record('course', ['id' => $moodlecourseid]);
                         if ($moodlecourse) {
@@ -106,10 +106,10 @@ if ($action == 'add' || $action == 'edit') {
                     $record->duration = $data->existing_duration;
                     $record->moodlecourseid = $data->existingcourseid;
                 }
-                
+
                 $record->timemodified = $now;
                 $record->modifiedby = $USER->id;
-                
+
                 if ($DB->update_record('local_atf_courses', $record)) {
                     \core\notification::success(get_string('courseupdated', 'local_annualtrainingforecast'));
                 } else {
@@ -120,8 +120,8 @@ if ($action == 'add' || $action == 'edit') {
                 try {
                     if ($data->coursesource === 'new') {
                         // Create a new Moodle course
-                        $moodlecourseid = \local_annualtrainingforecast\course_manager::create_parent_course($data);
-                        
+                        $moodlecourseid = \course_manager::create_parent_course($data);
+
                         // Add record to our custom table
                         $record = new stdClass();
                         $record->name = $data->name;
@@ -131,7 +131,7 @@ if ($action == 'add' || $action == 'edit') {
                     } else {
                         // Use an existing Moodle course
                         $existingcourse = $DB->get_record('course', ['id' => $data->existingcourseid], '*', MUST_EXIST);
-                        
+
                         // Add record to our custom table
                         $record = new stdClass();
                         $record->name = $existingcourse->fullname;
@@ -139,12 +139,12 @@ if ($action == 'add' || $action == 'edit') {
                         $record->duration = $data->existing_duration;
                         $record->moodlecourseid = $data->existingcourseid;
                     }
-                    
+
                     $record->timecreated = $now;
                     $record->timemodified = $now;
                     $record->createdby = $USER->id;
                     $record->modifiedby = $USER->id;
-                    
+
                     if ($newid = $DB->insert_record('local_atf_courses', $record)) {
                         \core\notification::success(get_string('courseadded', 'local_annualtrainingforecast'));
                     } else {
@@ -158,7 +158,7 @@ if ($action == 'add' || $action == 'edit') {
                     \core\notification::error('Error creating course: ' . $e->getMessage());
                 }
             }
-            
+
             redirect(new moodle_url('/local/annualtrainingforecast/manage.php'));
         }
     } else if ($type == 'iteration') {
@@ -169,20 +169,20 @@ if ($action == 'add' || $action == 'edit') {
             $iteration = $DB->get_record('local_atf_iterations', ['id' => $id], '*', MUST_EXIST);
             $parentid = $iteration->parentid;
         }
-        
-        $form = new \local_annualtrainingforecast\forms\iteration_form(null, [
+
+        $form = new forms\iteration_form(null, [
             'iteration' => $iteration,
             'parentid' => $parentid,
             'action' => $action
         ]);
-        
+
         if ($form->is_cancelled()) {
             redirect(new moodle_url('/local/annualtrainingforecast/manage.php'));
         } else if ($data = $form->get_data()) {
             global $DB, $USER;
-            
+
             $now = time();
-            
+
             if ($action == 'edit' && $id) {
                 // Update existing iteration
                 $record = new stdClass();
@@ -194,9 +194,9 @@ if ($action == 'add' || $action == 'edit') {
                 $record->completed = $data->completed;
                 $record->timemodified = $now;
                 $record->modifiedby = $USER->id;
-                
+
                 // Update the Moodle course if it exists
-                $moodlecourseid = \local_annualtrainingforecast\course_manager::get_moodle_course_id_for_iteration($id);
+                $moodlecourseid = \course_manager::get_moodle_course_id_for_iteration($id);
                 if ($moodlecourseid) {
                     $moodlecourse = $DB->get_record('course', ['id' => $moodlecourseid]);
                     if ($moodlecourse) {
@@ -207,7 +207,7 @@ if ($action == 'add' || $action == 'edit') {
                         $DB->update_record('course', $moodlecourse);
                     }
                 }
-                
+
                 if ($DB->update_record('local_atf_iterations', $record)) {
                     \core\notification::success(get_string('instanceupdated', 'local_annualtrainingforecast'));
                 } else {
@@ -217,16 +217,16 @@ if ($action == 'add' || $action == 'edit') {
                 // Add new iteration
                 try {
                     // Get the parent course's Moodle course ID
-                    $parentMoodleCourseId = \local_annualtrainingforecast\course_manager::get_moodle_course_id_for_parent($parentid);
-                    
+                    $parentMoodleCourseId = \course_manager::get_moodle_course_id_for_parent($parentid);
+
                     if (!$parentMoodleCourseId) {
                         \core\notification::error('Parent course does not have an associated Moodle course');
                         redirect(new moodle_url('/local/annualtrainingforecast/manage.php'));
                     }
-                    
+
                     // Create a new Moodle course by cloning the parent
-                    $moodlecourseid = \local_annualtrainingforecast\course_manager::create_course_instance($data, $parentMoodleCourseId);
-                    
+                    $moodlecourseid = \course_manager::create_course_instance($data, $parentMoodleCourseId);
+
                     // Add record to our custom table
                     $record = new stdClass();
                     $record->parentid = $parentid;
@@ -240,7 +240,7 @@ if ($action == 'add' || $action == 'edit') {
                     $record->timemodified = $now;
                     $record->createdby = $USER->id;
                     $record->modifiedby = $USER->id;
-                    
+
                     if ($DB->insert_record('local_atf_iterations', $record)) {
                         \core\notification::success(get_string('instanceadded', 'local_annualtrainingforecast'));
                     } else {
@@ -255,21 +255,21 @@ if ($action == 'add' || $action == 'edit') {
                     \core\notification::error('Error creating course instance. See server logs for details.');
                 }
             }
-            
+
             redirect(new moodle_url('/local/annualtrainingforecast/manage.php'));
         }
     }
 } else if ($action == 'delete') {
     global $DB;
-    
+
     if ($type == 'course' && $id) {
         // Get course details for confirmation
         $course = $DB->get_record('local_atf_courses', ['id' => $id], '*', MUST_EXIST);
-        
+
         if (!$confirm) {
             // Show confirmation page
             echo $OUTPUT->header();
-            
+
             // Check if course has iterations
             $iterations = $DB->count_records('local_atf_iterations', ['parentid' => $id]);
             if ($iterations > 0) {
@@ -278,7 +278,7 @@ if ($action == 'add' || $action == 'edit') {
                 echo $OUTPUT->footer();
                 exit;
             }
-            
+
             $confirmurl = new moodle_url('/local/annualtrainingforecast/manage.php', [
                 'action' => 'delete',
                 'type' => 'course',
@@ -286,40 +286,40 @@ if ($action == 'add' || $action == 'edit') {
                 'confirm' => 1
             ]);
             $cancelurl = new moodle_url('/local/annualtrainingforecast/manage.php');
-            
+
             echo $OUTPUT->confirm(
                 get_string('confirmdelete', 'local_annualtrainingforecast') . ' "' . format_string($course->name) . '"?<br><br>' .
                 get_string('deletecoursewarning', 'local_annualtrainingforecast'),
                 $confirmurl,
                 $cancelurl
             );
-            
+
             echo $OUTPUT->footer();
             exit;
         }
-        
+
         // Check if course has iterations (double check)
         $iterations = $DB->count_records('local_atf_iterations', ['parentid' => $id]);
         if ($iterations > 0) {
             \core\notification::error(get_string('cannotdeletecourse', 'local_annualtrainingforecast'));
             redirect(new moodle_url('/local/annualtrainingforecast/manage.php'));
         }
-        
+
         // Delete course from our custom table only (don't delete from Moodle)
         if ($DB->delete_records('local_atf_courses', ['id' => $id])) {
             \core\notification::success(get_string('coursedeleted', 'local_annualtrainingforecast'));
         } else {
             \core\notification::error('Failed to delete course');
         }
-        
+
     } else if ($type == 'iteration' && $id) {
         // Get iteration details for confirmation
         $iteration = $DB->get_record('local_atf_iterations', ['id' => $id], '*', MUST_EXIST);
-        
+
         if (!$confirm) {
             // Show confirmation page
             echo $OUTPUT->header();
-            
+
             $confirmurl = new moodle_url('/local/annualtrainingforecast/manage.php', [
                 'action' => 'delete',
                 'type' => 'iteration',
@@ -327,18 +327,18 @@ if ($action == 'add' || $action == 'edit') {
                 'confirm' => 1
             ]);
             $cancelurl = new moodle_url('/local/annualtrainingforecast/manage.php');
-            
+
             echo $OUTPUT->confirm(
                 get_string('confirmdelete', 'local_annualtrainingforecast') . ' "' . format_string($iteration->name) . '"?<br><br>' .
                 get_string('deleteiterationwarning', 'local_annualtrainingforecast'),
                 $confirmurl,
                 $cancelurl
             );
-            
+
             echo $OUTPUT->footer();
             exit;
         }
-        
+
         // Delete iteration from our custom table only (don't delete from Moodle)
         if ($DB->delete_records('local_atf_iterations', ['id' => $id])) {
             \core\notification::success(get_string('instancedeleted', 'local_annualtrainingforecast'));
@@ -346,7 +346,7 @@ if ($action == 'add' || $action == 'edit') {
             \core\notification::error('Failed to delete course instance');
         }
     }
-    
+
     redirect(new moodle_url('/local/annualtrainingforecast/manage.php'));
 }
 
@@ -355,11 +355,11 @@ echo $OUTPUT->header();
 
 // Navigation tabs
 $tabs = [
-    new tabobject('gantt', new moodle_url('/local/annualtrainingforecast/index.php'), 
+    new tabobject('gantt', new moodle_url('/local/annualtrainingforecast/index.php'),
         get_string('ganttview', 'local_annualtrainingforecast')),
-    new tabobject('manage', new moodle_url('/local/annualtrainingforecast/manage.php'), 
+    new tabobject('manage', new moodle_url('/local/annualtrainingforecast/manage.php'),
         get_string('managecourses', 'local_annualtrainingforecast')),
-    new tabobject('reports', new moodle_url('/local/annualtrainingforecast/reports.php'), 
+    new tabobject('reports', new moodle_url('/local/annualtrainingforecast/reports.php'),
         get_string('reports', 'local_annualtrainingforecast'))
 ];
 
@@ -371,19 +371,19 @@ if (($action == 'add' || $action == 'edit') && isset($form)) {
 } else {
     // Display management interface
     echo html_writer::start_div('course-management');
-    
+
     // Add buttons
     echo html_writer::start_div('management-actions');
-    $addcourseurl = new moodle_url('/local/annualtrainingforecast/manage.php', 
+    $addcourseurl = new moodle_url('/local/annualtrainingforecast/manage.php',
         ['action' => 'add', 'type' => 'course']);
-    echo html_writer::link($addcourseurl, get_string('addparentcourse', 'local_annualtrainingforecast'), 
+    echo html_writer::link($addcourseurl, get_string('addparentcourse', 'local_annualtrainingforecast'),
         ['class' => 'btn btn-primary']);
     echo html_writer::end_div();
-    
+
     // List parent courses
     global $DB;
     $courses = $DB->get_records('local_atf_courses', null, 'name ASC');
-    
+
     if (empty($courses)) {
         echo html_writer::div(get_string('nocourses', 'local_annualtrainingforecast'), 'alert alert-info');
     } else {
@@ -391,46 +391,46 @@ if (($action == 'add' || $action == 'edit') && isset($form)) {
             echo html_writer::start_div('course-item card mb-3');
             echo html_writer::start_div('card-header d-flex justify-content-between align-items-center');
             echo html_writer::tag('h5', format_string($course->name), ['class' => 'mb-0']);
-            
+
             // Course actions
             echo html_writer::start_div('course-actions');
-            $editurl = new moodle_url('/local/annualtrainingforecast/manage.php', 
+            $editurl = new moodle_url('/local/annualtrainingforecast/manage.php',
                 ['action' => 'edit', 'type' => 'course', 'id' => $course->id]);
-            $deleteurl = new moodle_url('/local/annualtrainingforecast/manage.php', 
+            $deleteurl = new moodle_url('/local/annualtrainingforecast/manage.php',
                 ['action' => 'delete', 'type' => 'course', 'id' => $course->id]);
-            $additerurl = new moodle_url('/local/annualtrainingforecast/manage.php', 
+            $additerurl = new moodle_url('/local/annualtrainingforecast/manage.php',
                 ['action' => 'add', 'type' => 'iteration', 'parentid' => $course->id]);
-            
+
             // Link to Moodle course if it exists
             if (!empty($course->moodlecourseid)) {
                 $viewcourseurl = new moodle_url('/course/view.php', ['id' => $course->moodlecourseid]);
-                echo html_writer::link($viewcourseurl, $OUTPUT->pix_icon('i/course', get_string('viewcourse')), 
+                echo html_writer::link($viewcourseurl, $OUTPUT->pix_icon('i/course', get_string('viewcourse')),
                     ['class' => 'btn btn-sm btn-info', 'title' => get_string('viewcourse'), 'target' => '_blank']);
                 echo ' ';
             }
-            
-            echo html_writer::link($editurl, $OUTPUT->pix_icon('t/edit', get_string('edit')), 
+
+            echo html_writer::link($editurl, $OUTPUT->pix_icon('t/edit', get_string('edit')),
                 ['class' => 'btn btn-sm btn-secondary', 'title' => get_string('editcourse', 'local_annualtrainingforecast')]);
             echo ' ';
-            echo html_writer::link($deleteurl, $OUTPUT->pix_icon('t/delete', get_string('delete')), 
+            echo html_writer::link($deleteurl, $OUTPUT->pix_icon('t/delete', get_string('delete')),
                 ['class' => 'btn btn-sm btn-danger delete-course', 'title' => get_string('deletecourse', 'local_annualtrainingforecast')]);
             echo ' ';
-            echo html_writer::link($additerurl, get_string('addcourseinstance', 'local_annualtrainingforecast'), 
+            echo html_writer::link($additerurl, get_string('addcourseinstance', 'local_annualtrainingforecast'),
                 ['class' => 'btn btn-sm btn-success']);
             echo html_writer::end_div(); // course-actions
-            
+
             echo html_writer::end_div(); // card-header
-            
+
             echo html_writer::start_div('card-body');
             if (!empty($course->description)) {
                 echo html_writer::div(format_text($course->description), 'course-description');
             }
-            echo html_writer::div(get_string('courseduration', 'local_annualtrainingforecast') . ': ' . $course->duration . ' ' . 
+            echo html_writer::div(get_string('courseduration', 'local_annualtrainingforecast') . ': ' . $course->duration . ' ' .
                 get_string('days'), 'course-duration');
-            
+
             // List iterations
             $iterations = $DB->get_records('local_atf_iterations', ['parentid' => $course->id], 'startdate DESC');
-            
+
             if (!empty($iterations)) {
                 echo html_writer::start_tag('table', ['class' => 'table table-striped table-sm iterations-table']);
                 echo html_writer::start_tag('thead');
@@ -443,14 +443,14 @@ if (($action == 'add' || $action == 'edit') && isset($form)) {
                 echo html_writer::tag('th', get_string('actions', 'moodle'));
                 echo html_writer::end_tag('tr');
                 echo html_writer::end_tag('thead');
-                
+
                 echo html_writer::start_tag('tbody');
                 foreach ($iterations as $iteration) {
                     echo html_writer::start_tag('tr');
                     echo html_writer::tag('td', format_string($iteration->name));
                     echo html_writer::tag('td', userdate($iteration->startdate, get_string('strftimedatefullshort', 'core_langconfig')));
                     echo html_writer::tag('td', userdate($iteration->enddate, get_string('strftimedatefullshort', 'core_langconfig')));
-                    
+
                     // Status
                     $statusstrings = [
                         0 => get_string('status_upcoming', 'local_annualtrainingforecast'),
@@ -464,41 +464,41 @@ if (($action == 'add' || $action == 'edit') && isset($form)) {
                         2 => 'badge badge-success',
                         3 => 'badge badge-danger'
                     ];
-                    
+
                     echo html_writer::tag('td', html_writer::span(
-                        $statusstrings[$iteration->status], 
+                        $statusstrings[$iteration->status],
                         $statusclasses[$iteration->status]
                     ));
-                    
+
                     // Completed
-                    $completedtext = $iteration->completed ? 
-                        get_string('completed', 'local_annualtrainingforecast') : 
+                    $completedtext = $iteration->completed ?
+                        get_string('completed', 'local_annualtrainingforecast') :
                         get_string('notcompleted', 'local_annualtrainingforecast');
                     $completedclass = $iteration->completed ? 'badge badge-success' : 'badge badge-secondary';
                     echo html_writer::tag('td', html_writer::span($completedtext, $completedclass));
-                    
+
                     // Actions
                     echo html_writer::start_tag('td');
-                    $edititerurl = new moodle_url('/local/annualtrainingforecast/manage.php', 
+                    $edititerurl = new moodle_url('/local/annualtrainingforecast/manage.php',
                         ['action' => 'edit', 'type' => 'iteration', 'id' => $iteration->id]);
-                    $deleteiterurl = new moodle_url('/local/annualtrainingforecast/manage.php', 
+                    $deleteiterurl = new moodle_url('/local/annualtrainingforecast/manage.php',
                         ['action' => 'delete', 'type' => 'iteration', 'id' => $iteration->id]);
-                    
+
                     // Link to Moodle course if it exists
                     if (!empty($iteration->moodlecourseid)) {
                         $viewcourseurl = new moodle_url('/course/view.php', ['id' => $iteration->moodlecourseid]);
-                        echo html_writer::link($viewcourseurl, $OUTPUT->pix_icon('i/course', get_string('viewcourse')), 
+                        echo html_writer::link($viewcourseurl, $OUTPUT->pix_icon('i/course', get_string('viewcourse')),
                             ['class' => 'btn btn-sm btn-info', 'title' => get_string('viewcourse'), 'target' => '_blank']);
                         echo ' ';
                     }
-                    
-                    echo html_writer::link($edititerurl, $OUTPUT->pix_icon('t/edit', get_string('edit')), 
+
+                    echo html_writer::link($edititerurl, $OUTPUT->pix_icon('t/edit', get_string('edit')),
                         ['class' => 'btn btn-sm btn-secondary', 'title' => get_string('edit')]);
                     echo ' ';
-                    echo html_writer::link($deleteiterurl, $OUTPUT->pix_icon('t/delete', get_string('delete')), 
+                    echo html_writer::link($deleteiterurl, $OUTPUT->pix_icon('t/delete', get_string('delete')),
                         ['class' => 'btn btn-sm btn-danger delete-iteration', 'title' => get_string('delete')]);
                     echo html_writer::end_tag('td');
-                    
+
                     echo html_writer::end_tag('tr');
                 }
                 echo html_writer::end_tag('tbody');
@@ -506,12 +506,12 @@ if (($action == 'add' || $action == 'edit') && isset($form)) {
             } else {
                 echo html_writer::div(get_string('noiterations', 'local_annualtrainingforecast'), 'alert alert-info');
             }
-            
+
             echo html_writer::end_div(); // card-body
             echo html_writer::end_div(); // course-item
         }
     }
-    
+
     echo html_writer::end_div(); // course-management
 }
 
