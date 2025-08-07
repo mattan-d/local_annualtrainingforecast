@@ -1,0 +1,477 @@
+/* Gantt chart styles */
+.gantt-container-wrapper {
+  margin-top: 20px;
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  padding: 20px;
+  border: 1px solid #eaeaea;
+  transition: all 0.3s ease;
+}
+
+.gantt-container-wrapper:hover {
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+}
+
+.gantt-loading {
+  text-align: center;
+  padding: 30px;
+  display: none;
+}
+
+.gantt-loading .spinner-border {
+  width: 3rem;
+  height: 3rem;
+}
+
+.view-selector,
+.export-buttons {
+  margin-bottom: 25px;
+}
+
+.view-selector .btn {
+  margin-right: 8px;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  border-width: 2px;
+}
+
+.view-selector .btn-primary {
+  background-color: #3a7eff;
+  border-color: #3a7eff;
+}
+
+.view-selector .btn-primary:hover {
+  background-color: #2c6eef;
+  border-color: #2c6eef;
+}
+
+.view-selector .btn-outline-secondary {
+  color: #555;
+  border-color: #d0d0d0;
+}
+
+.view-selector .btn-outline-secondary:hover {
+  background-color: #f5f5f5;
+  color: #333;
+}
+
+.export-buttons .btn {
+  margin-right: 8px;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.export-buttons .btn i {
+  margin-right: 6px;
+}
+
+/* Table-based Gantt chart */
+.gantt-table-container {
+  overflow-x: auto;
+  margin-top: 15px;
+}
+
+.gantt-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  min-width: 800px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.gantt-table th,
+.gantt-table td {
+  border: 1px solid #e0e0e0;
+  padding: 0;
+  text-align: center;
+  position: relative;
+}
+
+.gantt-course-column {
+  width: 200px;
+  min-width: 200px;
+  max-width: 200px;
+  background-color: #f8f9fa;
+  position: sticky;
+  left: 0;
+  z-index: 10;
+  border-right: 2px solid #ddd !important;
+  padding: 10px !important;
+  text-align: left !important;
+}
+
+.gantt-month {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  padding: 10px 5px !important;
+  border-bottom: 2px solid #ddd !important;
+  color: #3a3a3a;
+  background: linear-gradient(to bottom, #ffffff, #f5f7fa);
+}
+
+.gantt-day {
+  width: 30px;
+  min-width: 30px;
+  max-width: 30px;
+  padding: 8px 0 !important;
+  font-size: 0.85em;
+  color: #555;
+  border-bottom: 2px solid #ddd !important;
+}
+
+.gantt-day.weekend {
+  background-color: #f8f9fa;
+  color: #999;
+}
+
+.gantt-day.today {
+  background-color: #fff3cd;
+  font-weight: bold;
+  color: #856404;
+  position: relative;
+}
+
+.gantt-day.today:after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background-color: #ffc107;
+}
+
+.gantt-course-cell {
+  background-color: #f8f9fa;
+  padding: 10px !important;
+  text-align: left !important;
+  position: sticky;
+  left: 0;
+  z-index: 10;
+  border-right: 2px solid #ddd !important;
+}
+
+.gantt-course-name {
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gantt-course-parent {
+  font-size: 0.85em;
+  color: #666;
+  margin-bottom: 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gantt-course-status {
+  margin-top: 5px;
+}
+
+.gantt-course-status .badge {
+  font-size: 0.75em;
+  padding: 4px 8px;
+  font-weight: 500;
+}
+
+.gantt-day-cell {
+  width: 30px;
+  min-width: 30px;
+  max-width: 30px;
+  height: 30px;
+  padding: 0 !important;
+  cursor: default;
+}
+
+.gantt-day-active {
+  background-color: #cce5ff;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.gantt-day-active:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+  z-index: 20;
+}
+
+.gantt-day-active.status-upcoming {
+  background-color: #cce5ff;
+}
+
+.gantt-day-active.status-inprogress {
+  background-color: #fff3cd;
+}
+
+.gantt-day-active.status-completed {
+  background-color: #d4edda;
+}
+
+.gantt-day-active.status-cancelled {
+  background-color: #f8d7da;
+}
+
+.gantt-day-start {
+  border-left: 2px solid rgba(0, 0, 0, 0.2) !important;
+  border-top-left-radius: 4px;
+  border-bottom-left-radius: 4px;
+}
+
+.gantt-day-end {
+  border-right: 2px solid rgba(0, 0, 0, 0.2) !important;
+  border-top-right-radius: 4px;
+  border-bottom-right-radius: 4px;
+}
+
+/* Tooltip customization */
+.tooltip-inner {
+  max-width: 300px;
+  padding: 10px;
+  background-color: #fff;
+  color: #333;
+  border: 1px solid #ddd;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  text-align: left;
+}
+
+.bs-tooltip-auto[x-placement^="top"] .arrow::before,
+.bs-tooltip-top .arrow::before {
+  border-top-color: #ddd;
+}
+
+.bs-tooltip-auto[x-placement^="right"] .arrow::before,
+.bs-tooltip-right .arrow::before {
+  border-right-color: #ddd;
+}
+
+.bs-tooltip-auto[x-placement^="bottom"] .arrow::before,
+.bs-tooltip-bottom .arrow::before {
+  border-bottom-color: #ddd;
+}
+
+.bs-tooltip-auto[x-placement^="left"] .arrow::before,
+.bs-tooltip-left .arrow::before {
+  border-left-color: #ddd;
+}
+
+/* Modal customization */
+.modal-content {
+  border-radius: 8px;
+  border: none;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #eaeaea;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  padding: 15px 20px;
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.modal-footer {
+  border-top: 1px solid #eaeaea;
+  padding: 15px 20px;
+}
+
+/* Course management styles */
+.course-management {
+  margin-top: 20px;
+}
+
+.management-actions {
+  margin-bottom: 25px;
+}
+
+.course-item {
+  margin-bottom: 25px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  border: 1px solid #eaeaea;
+  transition: all 0.3s ease;
+}
+
+.course-item:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+}
+
+.card-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #eaeaea;
+  padding: 15px 20px;
+}
+
+.card-body {
+  padding: 20px;
+}
+
+.course-actions {
+  display: flex;
+  align-items: center;
+}
+
+.course-actions .btn {
+  margin-left: 8px;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.course-description {
+  margin-bottom: 15px;
+  color: #555;
+}
+
+.course-duration {
+  font-weight: 500;
+  color: #555;
+  margin-bottom: 20px;
+}
+
+.iterations-table {
+  margin-top: 15px;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.iterations-table thead th {
+  background-color: #f8f9fa;
+  border-bottom: 2px solid #dee2e6;
+  padding: 12px;
+  font-weight: 600;
+  color: #333;
+}
+
+.iterations-table tbody td {
+  padding: 12px;
+  vertical-align: middle;
+}
+
+.iterations-table .badge {
+  padding: 5px 8px;
+  font-weight: 500;
+}
+
+/* PDF export styles */
+.pdf-gantt-chart {
+  margin-top: 20px;
+  overflow-x: auto;
+}
+
+/* RTL support */
+.dir-rtl .gantt-course-column,
+.dir-rtl .gantt-course-cell {
+  left: auto;
+  right: 0;
+  border-right: none !important;
+  border-left: 2px solid #ddd !important;
+}
+
+.dir-rtl .gantt-day-start {
+  border-left: none !important;
+  border-right: 2px solid rgba(0, 0, 0, 0.2) !important;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  border-top-right-radius: 4px;
+  border-bottom-right-radius: 4px;
+}
+
+.dir-rtl .gantt-day-end {
+  border-right: none !important;
+  border-left: 2px solid rgba(0, 0, 0, 0.2) !important;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  border-top-left-radius: 4px;
+  border-bottom-left-radius: 4px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+  .gantt-course-column,
+  .gantt-course-cell {
+    width: 180px;
+    min-width: 180px;
+    max-width: 180px;
+  }
+}
+
+@media (max-width: 768px) {
+  .gantt-course-column,
+  .gantt-course-cell {
+    width: 150px;
+    min-width: 150px;
+    max-width: 150px;
+  }
+
+  .gantt-day,
+  .gantt-day-cell {
+    width: 25px;
+    min-width: 25px;
+    max-width: 25px;
+  }
+
+  .gantt-container-wrapper {
+    padding: 15px;
+  }
+}
+
+@media (max-width: 576px) {
+  .gantt-course-column,
+  .gantt-course-cell {
+    width: 120px;
+    min-width: 120px;
+    max-width: 120px;
+  }
+
+  .gantt-day,
+  .gantt-day-cell {
+    width: 22px;
+    min-width: 22px;
+    max-width: 22px;
+  }
+
+  .gantt-container-wrapper {
+    padding: 10px;
+  }
+
+  .view-selector .btn,
+  .export-buttons .btn {
+    padding: 6px 12px;
+    font-size: 0.9em;
+  }
+}
+
+/* Print styles */
+@media print {
+  .gantt-container-wrapper {
+    box-shadow: none;
+    border: 1px solid #ddd;
+  }
+
+  .gantt-day-active:hover {
+    transform: none;
+    box-shadow: none;
+  }
+
+  .view-selector,
+  .export-buttons {
+    display: none;
+  }
+}
