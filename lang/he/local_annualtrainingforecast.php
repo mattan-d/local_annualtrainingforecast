@@ -23,9 +23,6 @@
  */
 
 $string['pluginname'] = 'תחזית הדרכה שנתית';
-$string['annualtrainingforecast:managecourses'] = 'ניהול קורסי הדרכה';
-$string['annualtrainingforecast:viewforecast'] = 'צפייה בתחזית הדרכה';
-$string['annualtrainingforecast:updatestatus'] = 'עדכון סטטוס הדרכה';
 
 // Navigation
 $string['ganttview'] = 'תצוגת גאנט';
