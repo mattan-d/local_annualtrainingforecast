@@ -1,87 +1,90 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
+// הקובץ הזה הוא חלק מ‑Moodle - http://moodle.org/
 //
-// Moodle is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
+// Moodle הוא תוכנה חופשית: באפשרותך להפיץ אותו ולשנות אותו בתנאים של
+// רישיון GPL כפי שפורסם על‑ידי Free Software Foundation,
+// או (לבחירתך) בכל רישיון מאוחר יותר.
 //
-// Moodle is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
+// Moodle מופץ בתקווה שיועיל,
+// אך ללא אחריות מכל סוג — אפילו בלי האחריות המובטחת
+// לסחירות או התאמה למטרה מסוימת. ראה את
+// רישיון GPL למידע נוסף.
 //
-// You should have received a copy of the GNU General Public License
-// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+// היית אמור לקבל עותק של רישיון GPL עם Moodle.
+// אם לא — ראה <http://www.gnu.org/licenses/>.
 
 /**
- * Hebrew language strings
+ * מחרוזות שפה באנגלית לתוסף Annual Training Forecast
  *
  * @package    local_annualtrainingforecast
  * @copyright  2025 Mattan Dor (CentricApp)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['pluginname'] = 'תחזית הדרכה שנתית';
+defined('MOODLE_INTERNAL') || die();
 
-// Navigation
+$string['pluginname'] = 'תחזית שנתי להכשרה';
+
+// ניווט
 $string['ganttview'] = 'תצוגת גאנט';
 $string['managecourses'] = 'ניהול קורסים';
 $string['reports'] = 'דוחות';
 
-// Gantt view
-$string['yearview'] = 'תצוגת שנה';
-$string['halfyearview'] = 'תצוגת חצי שנה';
-$string['quarterlyview'] = 'תצוגת רבעון';
-$string['exportexcel'] = 'ייצוא ל-Excel';
-$string['exportpdf'] = 'ייצוא ל-PDF';
+// ניהול קורסים
+$string['addparentcourse'] = 'הוסף קורס‑אב';
+$string['addcourseinstance'] = 'הוסף מופע קורס';
+$string['editcourse'] = 'ערוך קורס';
+$string['deletecourse'] = 'מחק קורס';
+$string['coursename'] = 'שם הקורס';
+$string['coursedescription'] = 'תיאור הקורס';
+$string['courseduration'] = 'משך הקורס (בימים)';
+$string['startdate'] = 'תאריך התחלה';
+$string['enddate'] = 'תאריך סיום';
+$string['status'] = 'סטטוס';
+$string['completed'] = 'הושלם';
+$string['notcompleted'] = 'לא הושלם';
 
-// Course status
-$string['status_upcoming'] = 'עתידי';
+// מקור הקורס
+$string['coursesource'] = 'מקור הקורס';
+$string['createnewcourse'] = 'צור קורס חדש';
+$string['selectexistingcourse'] = 'בחר קורס קיים';
+$string['newcoursedetails'] = 'פרטי הקורס החדש';
+$string['existingcoursedetails'] = 'פרטי הקורס הקיים';
+$string['selectcourse'] = 'בחר קורס';
+
+// אפשרויות סטטוס
+$string['status_upcoming'] = 'מתוכנן';
 $string['status_inprogress'] = 'בתהליך';
 $string['status_completed'] = 'הושלם';
 $string['status_cancelled'] = 'בוטל';
 
-// Course management
-$string['addparentcourse'] = 'הוספת קורס אב';
-$string['addcourseinstance'] = 'הוספת מחזור קורס';
-$string['editcourse'] = 'עריכת קורס';
-$string['deletecourse'] = 'מחיקת קורס';
-$string['coursename'] = 'שם הקורס';
-$string['coursedescription'] = 'תיאור';
-$string['courseduration'] = 'משך (ימים)';
-$string['startdate'] = 'תאריך התחלה';
-$string['enddate'] = 'תאריך סיום';
-$string['status'] = 'סטטוס';
-$string['completed'] = 'בוצע';
-$string['notcompleted'] = 'לא בוצע';
-$string['parentcourse'] = 'קורס אב';
-$string['confirmdelete'] = 'האם אתה בטוח שברצונך למחוק קורס זה?';
+// הודעות
 $string['courseadded'] = 'הקורס נוסף בהצלחה';
 $string['courseupdated'] = 'הקורס עודכן בהצלחה';
 $string['coursedeleted'] = 'הקורס נמחק בהצלחה';
-$string['instanceadded'] = 'מחזור הקורס נוסף בהצלחה';
-$string['instanceupdated'] = 'מחזור הקורס עודכן בהצלחה';
-$string['instancedeleted'] = 'מחזור הקורס נמחק בהצלחה';
-$string['nocourses'] = 'לא נמצאו קורסים. אנא הוסף קורס.';
-$string['noiterations'] = 'לא נמצאו מחזורי קורס. אנא הוסף מחזור קורס.';
-$string['cannotdeletecourse'] = 'לא ניתן למחוק קורס כי יש לו מחזורים. מחק את כל המחזורים תחילה.';
-$string['statusupdated'] = 'הסטטוס עודכן בהצלחה';
-$string['updatefailed'] = 'עדכון הסטטוס נכשל';
+$string['instanceadded'] = 'מופע הקורס נוסף בהצלחה';
+$string['instanceupdated'] = 'מופע הקורס עודכן בהצלחה';
+$string['instancedeleted'] = 'מופע הקורס נמחק בהצלחה';
+$string['nocourses'] = 'לא נמצאו קורסים. הוסף קורס‑אב כדי להתחיל.';
+$string['noiterations'] = 'לא נמצאו מופעי קורס עבור הקורס הזה.';
+$string['cannotdeletecourse'] = 'לא ניתן למחוק קורס: קיימים לו מופעי קורס. יש למחוק את כל המופעים קודם.';
 
-// Course source options
-$string['coursesource'] = 'מקור הקורס';
-$string['createnewcourse'] = 'יצירת קורס חדש';
-$string['selectexistingcourse'] = 'בחירת קורס קיים';
-$string['newcoursedetails'] = 'פרטי קורס חדש';
-$string['existingcoursedetails'] = 'פרטי קורס קיים';
-$string['selectcourse'] = 'בחר קורס';
+// הודעות אישור
+$string['confirmdelete'] = 'האם אתה בטוח שברצונך למחוק';
+$string['deletecoursewarning'] = 'זה יסיר את הקורס ממערכת תחזית השנתי להכשרה, אך קורס Moodle המשויך יישאר ללא שינוי.';
+$string['deleteiterationwarning'] = 'זה יסיר את מופע הקורס ממערכת תחזית השנתי להכשרה, אך קורס Moodle המשויך יישאר ללא שינוי.';
 
-// Reports
-$string['statussummary'] = 'סיכום סטטוסים';
-$string['completionsummary'] = 'סיכום השלמות';
-$string['monthlydistribution'] = 'התפלגות חודשית';
+// מחרוזות חסרות שמשמשות בקוד
+$string['parentcourse'] = 'קורס‑אב';
+$string['yearview'] = 'תצוגת שנה';
+$string['halfyearview'] = 'תצוגת חצי שנה';
+$string['quarterlyview'] = 'תצוגת רבעון';
+$string['updatefailed'] = 'העדכון נכשל';
+$string['enddatebeforestartdate'] = 'תאריך הסיום לא יכול להיות לפני תאריך ההתחלה';
+$string['exportexcel'] = 'ייצא ל‑Excel';
+$string['exportpdf'] = 'ייצא ל‑PDF';
+$string['statussummary'] = 'תקציר סטטוס';
 $string['count'] = 'כמות';
+$string['completionsummary'] = 'תקציר סיום';
+$string['monthlydistribution'] = 'התפלגות חודשית';
 $string['month'] = 'חודש';
-$string['days'] = 'ימים';
-$string['enddatebeforestartdate'] = 'תאריך סיום לא יכול להיות לפני תאריך התחלה';
