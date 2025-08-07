@@ -69,12 +69,33 @@ $sql = "SELECT completed, COUNT(*) as count
         ORDER BY completed";
 $completionSummary = $DB->get_records_sql($sql);
 
-// Monthly distribution
-$sql = "SELECT FROM_UNIXTIME(startdate, '%Y-%m') as month, COUNT(*) as count
-        FROM {local_atf_iterations}
-        GROUP BY month
-        ORDER BY month";
-$monthlyDistribution = $DB->get_records_sql($sql);
+// Monthly distribution - Cross-database compatible
+$iterations = $DB->get_records('local_atf_iterations', null, '', 'id, startdate');
+$monthlyData = [];
+
+foreach ($iterations as $iteration) {
+    if ($iteration->startdate > 0) {
+        $month = date('Y-m', $iteration->startdate);
+        if (!isset($monthlyData[$month])) {
+            $monthlyData[$month] = 0;
+        }
+        $monthlyData[$month]++;
+    }
+}
+
+// Convert to objects for consistency with other queries
+$monthlyDistribution = [];
+foreach ($monthlyData as $month => $count) {
+    $obj = new stdClass();
+    $obj->month = $month;
+    $obj->count = $count;
+    $monthlyDistribution[] = $obj;
+}
+
+// Sort by month
+usort($monthlyDistribution, function($a, $b) {
+    return strcmp($a->month, $b->month);
+});
 
 // Display reports
 echo html_writer::start_div('reports-container');
