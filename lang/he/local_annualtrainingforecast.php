@@ -33,8 +33,8 @@ $string['reports'] = 'דוחות';
 $string['yearview'] = 'תצוגת שנה';
 $string['halfyearview'] = 'תצוגת חצי שנה';
 $string['quarterlyview'] = 'תצוגת רבעון';
-$string['exportpdf'] = 'ייצוא ל-PDF';
 $string['exportexcel'] = 'ייצוא ל-Excel';
+$string['exportpdf'] = 'ייצוא ל-PDF';
 
 // Course status
 $string['status_upcoming'] = 'עתידי';

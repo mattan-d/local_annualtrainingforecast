@@ -83,6 +83,7 @@ $string['quarterlyview'] = 'Quarterly View';
 $string['updatefailed'] = 'Update failed';
 $string['enddatebeforestartdate'] = 'End date cannot be before start date';
 $string['exportexcel'] = 'Export Excel';
+$string['exportpdf'] = 'Export PDF';
 $string['statussummary'] = 'Status Summary';
 $string['count'] = 'Count';
 $string['completionsummary'] = 'Completion Summary';
