@@ -60,6 +60,16 @@ class course_form extends \moodleform {
             ['size' => '64', 'maxlength' => 255]);
         $mform->setType('name', PARAM_TEXT);
 
+        // Course category with autocomplete
+        $displaylist = \core_course_category::make_categories_list('moodle/course:create');
+        $mform->addElement('autocomplete', 'category', get_string('coursecategory'), $displaylist, [
+            'showsuggestions' => true,
+            'casesensitive' => false,
+            'noselectionstring' => get_string('choosedots')
+        ]);
+        $mform->addHelpButton('category', 'coursecategory');
+        $mform->setDefault('category', \core_course_category::get_default());
+
         // Description - using a simple textarea instead of editor to avoid complexity
         $mform->addElement('textarea', 'description', get_string('coursedescription', 'local_annualtrainingforecast'),
             ['rows' => 10, 'cols' => 60]);
@@ -74,9 +84,9 @@ class course_form extends \moodleform {
         // Existing course section
         $mform->addElement('header', 'existingcoursehdr', get_string('existingcoursedetails', 'local_annualtrainingforecast'));
 
-        // Get all available courses
+        // Get all available courses with category information
         $courses = $DB->get_records_sql(
-            "SELECT c.id, c.fullname, c.shortname, cc.name as categoryname
+            "SELECT c.id, c.fullname, c.shortname, c.category, cc.name as categoryname
              FROM {course} c
              JOIN {course_categories} cc ON c.category = cc.id
              WHERE c.id != :siteid
@@ -89,7 +99,11 @@ class course_form extends \moodleform {
             $courseOptions[$c->id] = $c->categoryname . ' / ' . $c->fullname . ' (' . $c->shortname . ')';
         }
 
-        $mform->addElement('select', 'existingcourseid', get_string('selectcourse', 'local_annualtrainingforecast'), $courseOptions);
+        $mform->addElement('autocomplete', 'existingcourseid', get_string('selectcourse', 'local_annualtrainingforecast'), $courseOptions, [
+            'showsuggestions' => true,
+            'casesensitive' => false,
+            'noselectionstring' => get_string('choosedots')
+        ]);
 
         // Duration for existing course
         $mform->addElement('text', 'existing_duration', get_string('courseduration', 'local_annualtrainingforecast'));
@@ -132,6 +146,9 @@ class course_form extends \moodleform {
                 } else {
                     // This was created as a new course by our plugin
                     $data['coursesource'] = 'new';
+                    if ($existingcourse) {
+                        $data['category'] = $existingcourse->category;
+                    }
                 }
             }
 
@@ -157,6 +174,7 @@ class course_form extends \moodleform {
                     // Show new course section, hide existing course section
                     $('#fgroup_id_newcoursehdr').show();
                     $('#fitem_id_name').show();
+                    $('#fitem_id_category').show();
                     $('#fitem_id_description').show();
                     $('#fitem_id_duration').show();
                     
@@ -167,6 +185,7 @@ class course_form extends \moodleform {
                     // Show existing course section, hide new course section
                     $('#fgroup_id_newcoursehdr').hide();
                     $('#fitem_id_name').hide();
+                    $('#fitem_id_category').hide();
                     $('#fitem_id_description').hide();
                     $('#fitem_id_duration').hide();
                     
@@ -204,6 +223,18 @@ class course_form extends \moodleform {
             // Validate new course fields only
             if (empty($data['name'])) {
                 $errors['name'] = get_string('required');
+            }
+
+            if (empty($data['category'])) {
+                $errors['category'] = get_string('required');
+            } else {
+                // Validate that the category exists and user has permission
+                $category = \core_course_category::get($data['category'], IGNORE_MISSING);
+                if (!$category) {
+                    $errors['category'] = get_string('invalidcategory', 'error');
+                } else if (!$category->can_create_course()) {
+                    $errors['category'] = get_string('cannotcreatecourse', 'error');
+                }
             }
 
             if (empty($data['duration']) || !is_numeric($data['duration']) || $data['duration'] <= 0) {

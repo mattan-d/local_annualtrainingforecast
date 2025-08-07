@@ -15,17 +15,17 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Course manager class
+ * Course manager class for handling course operations
  *
  * @package    local_annualtrainingforecast
  * @copyright  2025 Mattan Dor (CentricApp)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot . '/course/lib.php');
+require_once($CFG->libdir . '/coursecatlib.php');
 
 /**
  * Course manager class
@@ -61,29 +61,41 @@ class course_manager {
     }
 
     /**
-     * Create a new Moodle course for a parent course
+     * Create a parent course in Moodle
      *
-     * @param object $data Form data
-     * @return int New course ID
+     * @param stdClass $data Form data
+     * @return int The created course ID
+     * @throws Exception
      */
     public static function create_parent_course($data) {
-        global $CFG, $DB;
+        global $DB, $USER;
 
-        // Get the Annual Training category
-        $categoryid = self::get_annual_training_category();
+        // Validate category
+        $category = \core_course_category::get($data->category, MUST_EXIST);
+        if (!$category->can_create_course()) {
+            throw new Exception('Cannot create course in this category');
+        }
 
-        // Prepare course data
-        $coursedata = new \stdClass();
+        // Create course object
+        $coursedata = new stdClass();
         $coursedata->fullname = $data->name;
-        $coursedata->shortname = 'ATF_' . substr(md5($data->name . time()), 0, 8);
-        $coursedata->category = $categoryid;
+        $coursedata->shortname = 'ATF_' . time() . '_' . substr(md5($data->name), 0, 8);
         $coursedata->summary = $data->description;
         $coursedata->summaryformat = FORMAT_HTML;
+        $coursedata->category = $data->category;
         $coursedata->visible = 1;
         $coursedata->startdate = time();
-        $coursedata->enddate = strtotime('+' . $data->duration . ' days', time());
-        $coursedata->timecreated = time();
-        $coursedata->timemodified = time();
+        $coursedata->enddate = 0;
+        $coursedata->format = 'topics';
+        $coursedata->numsections = 10;
+        $coursedata->newsitems = 5;
+        $coursedata->showgrades = 1;
+        $coursedata->showreports = 0;
+        $coursedata->maxbytes = 0;
+        $coursedata->groupmode = 0;
+        $coursedata->groupmodeforce = 0;
+        $coursedata->enablecompletion = 0;
+        $coursedata->completionnotify = 0;
 
         // Create the course
         $course = create_course($coursedata);
@@ -108,7 +120,7 @@ class course_manager {
         $categoryid = self::get_annual_training_category();
 
         // Create a new course with basic settings
-        $coursedata = new \stdClass();
+        $coursedata = new stdClass();
         $coursedata->fullname = $data->name;
         $coursedata->shortname = 'ATF_INST_' . substr(md5($data->name . time()), 0, 8);
         $coursedata->category = $categoryid;
@@ -120,6 +132,15 @@ class course_manager {
         $coursedata->format = $parentcourse->format;
         $coursedata->timecreated = time();
         $coursedata->timemodified = time();
+        $coursedata->numsections = $parentcourse->numsections;
+        $coursedata->newsitems = $parentcourse->newsitems;
+        $coursedata->showgrades = $parentcourse->showgrades;
+        $coursedata->showreports = $parentcourse->showreports;
+        $coursedata->maxbytes = $parentcourse->maxbytes;
+        $coursedata->groupmode = $parentcourse->groupmode;
+        $coursedata->groupmodeforce = $parentcourse->groupmodeforce;
+        $coursedata->enablecompletion = $parentcourse->enablecompletion;
+        $coursedata->completionnotify = $parentcourse->completionnotify;
 
         // Create the course
         $newcourse = create_course($coursedata);
@@ -525,35 +546,77 @@ class course_manager {
      * Get the Moodle course ID associated with a parent course
      *
      * @param int $parentid Parent course ID in local_atf_courses
-     * @return int|false Moodle course ID or false if not found
+     * @return int|null Moodle course ID or null if not found
      */
     public static function get_moodle_course_id_for_parent($parentid) {
         global $DB;
 
         $record = $DB->get_record('local_atf_courses', ['id' => $parentid], 'moodlecourseid');
-
-        if ($record && !empty($record->moodlecourseid)) {
-            return $record->moodlecourseid;
-        }
-
-        return false;
+        return $record ? $record->moodlecourseid : null;
     }
 
     /**
      * Get the Moodle course ID associated with a course instance
      *
      * @param int $iterationid Iteration ID in local_atf_iterations
-     * @return int|false Moodle course ID or false if not found
+     * @return int|null Moodle course ID or null if not found
      */
     public static function get_moodle_course_id_for_iteration($iterationid) {
         global $DB;
 
         $record = $DB->get_record('local_atf_iterations', ['id' => $iterationid], 'moodlecourseid');
+        return $record ? $record->moodlecourseid : null;
+    }
 
-        if ($record && !empty($record->moodlecourseid)) {
-            return $record->moodlecourseid;
+    /**
+     * Get all course data for Gantt chart
+     *
+     * @return array Array of course data
+     */
+    public static function get_gantt_data() {
+        global $DB;
+
+        $sql = "SELECT 
+                    c.id as course_id,
+                    c.fullname as course_name,
+                    c.summary as course_description,
+                    c.enddate - c.startdate as course_duration,
+                    i.id as iteration_id,
+                    i.name as iteration_name,
+                    i.startdate,
+                    i.enddate,
+                    i.status,
+                    i.completed
+                FROM {course} c
+                LEFT JOIN {local_atf_iterations} i ON c.id = i.parentid
+                ORDER BY c.fullname, i.startdate";
+
+        $records = $DB->get_records_sql($sql);
+
+        $courses = [];
+        foreach ($records as $record) {
+            if (!isset($courses[$record->course_id])) {
+                $courses[$record->course_id] = [
+                    'id' => $record->course_id,
+                    'name' => $record->course_name,
+                    'description' => $record->course_description,
+                    'duration' => $record->course_duration,
+                    'iterations' => []
+                ];
+            }
+
+            if ($record->iteration_id) {
+                $courses[$record->course_id]['iterations'][] = [
+                    'id' => $record->iteration_id,
+                    'name' => $record->iteration_name,
+                    'startdate' => $record->startdate,
+                    'enddate' => $record->enddate,
+                    'status' => $record->status,
+                    'completed' => $record->completed
+                ];
+            }
         }
 
-        return false;
+        return array_values($courses);
     }
 }
