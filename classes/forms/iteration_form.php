@@ -60,6 +60,34 @@ class iteration_form extends \moodleform {
             $mform->setDefault('name', $parentcourse->name);
         }
 
+        // Course category selector
+        $categories = \core_course_category::make_categories_list('moodle/course:create');
+        $mform->addElement('autocomplete', 'category', get_string('category'), $categories);
+        $mform->addHelpButton('category', 'category', 'local_annualtrainingforecast');
+        $mform->addRule('category', get_string('required'), 'required', null, 'client');
+        
+        // Set default category
+        if (empty($iteration)) {
+            // Try to get the parent course's category first
+            if (!empty($parentcourse->moodlecourseid)) {
+                $parentmoodlecourse = $DB->get_record('course', ['id' => $parentcourse->moodlecourseid], 'category');
+                if ($parentmoodlecourse) {
+                    $mform->setDefault('category', $parentmoodlecourse->category);
+                } else {
+                    $mform->setDefault('category', get_config('moodlecourse', 'category'));
+                }
+            } else {
+                // Fall back to default category
+                $mform->setDefault('category', get_config('moodlecourse', 'category'));
+            }
+        } else if (!empty($iteration->moodlecourseid)) {
+            // For existing iterations, get the current course category
+            $iterationmoodlecourse = $DB->get_record('course', ['id' => $iteration->moodlecourseid], 'category');
+            if ($iterationmoodlecourse) {
+                $mform->setDefault('category', $iterationmoodlecourse->category);
+            }
+        }
+
         // Start date
         $mform->addElement('date_selector', 'startdate', get_string('startdate', 'local_annualtrainingforecast'));
         $mform->addRule('startdate', get_string('required'), 'required', null, 'client');
@@ -140,6 +168,20 @@ class iteration_form extends \moodleform {
 
         if ($data['enddate'] < $data['startdate']) {
             $errors['enddate'] = get_string('enddatebeforestartdate', 'local_annualtrainingforecast');
+        }
+
+        // Validate category
+        if (!empty($data['category'])) {
+            try {
+                $category = \core_course_category::get($data['category'], IGNORE_MISSING);
+                if (!$category) {
+                    $errors['category'] = get_string('invalidcategoryid', 'error');
+                } else if (!$category->can_create_course()) {
+                    $errors['category'] = get_string('nocreateincategory', 'error');
+                }
+            } catch (\Exception $e) {
+                $errors['category'] = get_string('invalidcategoryid', 'error');
+            }
         }
 
         return $errors;

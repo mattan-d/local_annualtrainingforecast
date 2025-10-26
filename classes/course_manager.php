@@ -72,11 +72,11 @@ class course_manager {
         // Validate category
         $category = \core_course_category::get($data->category, MUST_EXIST);
         if (!$category->can_create_course()) {
-            throw new Exception('Cannot create course in this category');
+            throw new \moodle_exception('cannotcreatecourse', 'error');
         }
 
         // Create course object
-        $coursedata = new stdClass();
+        $coursedata = new \stdClass();
         $coursedata->fullname = $data->name;
         $coursedata->shortname = 'ATF_' . time() . '_' . substr(md5($data->name), 0, 8);
         $coursedata->summary = $data->description;
@@ -115,13 +115,19 @@ class course_manager {
         // Get the parent course
         $parentcourse = $DB->get_record('course', ['id' => $parentcourseid], '*', MUST_EXIST);
 
-        // Get the Annual Training category
-        $categoryid = self::get_annual_training_category();
+        // Use the category from form data if provided, otherwise use parent's category
+        $categoryid = !empty($data->category) ? $data->category : $parentcourse->category;
+        
+        // Validate the category
+        $category = \core_course_category::get($categoryid, MUST_EXIST);
+        if (!$category->can_create_course()) {
+            throw new \moodle_exception('cannotcreatecourse', 'error');
+        }
 
         // Create a new course with basic settings
-        $coursedata = new stdClass();
+        $coursedata = new \stdClass();
         $coursedata->fullname = $data->name;
-        $coursedata->shortname = 'ATF_INST_' . substr(md5($data->name . time()), 0, 8);
+        $coursedata->shortname = 'ATF_INST_' . time() . '_' . substr(md5($data->name), 0, 8);
         $coursedata->category = $categoryid;
         $coursedata->summary = $parentcourse->summary;
         $coursedata->summaryformat = $parentcourse->summaryformat;
@@ -131,15 +137,17 @@ class course_manager {
         $coursedata->format = $parentcourse->format;
         $coursedata->timecreated = time();
         $coursedata->timemodified = time();
-        $coursedata->numsections = $parentcourse->numsections;
-        $coursedata->newsitems = $parentcourse->newsitems;
-        $coursedata->showgrades = $parentcourse->showgrades;
-        $coursedata->showreports = $parentcourse->showreports;
-        $coursedata->maxbytes = $parentcourse->maxbytes;
-        $coursedata->groupmode = $parentcourse->groupmode;
-        $coursedata->groupmodeforce = $parentcourse->groupmodeforce;
-        $coursedata->enablecompletion = $parentcourse->enablecompletion;
-        $coursedata->completionnotify = $parentcourse->completionnotify;
+        
+        // Copy additional settings from parent course
+        $coursedata->numsections = $parentcourse->numsections ?? 10;
+        $coursedata->newsitems = $parentcourse->newsitems ?? 5;
+        $coursedata->showgrades = $parentcourse->showgrades ?? 1;
+        $coursedata->showreports = $parentcourse->showreports ?? 0;
+        $coursedata->maxbytes = $parentcourse->maxbytes ?? 0;
+        $coursedata->groupmode = $parentcourse->groupmode ?? 0;
+        $coursedata->groupmodeforce = $parentcourse->groupmodeforce ?? 0;
+        $coursedata->enablecompletion = $parentcourse->enablecompletion ?? 0;
+        $coursedata->completionnotify = $parentcourse->completionnotify ?? 0;
 
         // Create the course
         $newcourse = create_course($coursedata);
@@ -455,7 +463,7 @@ class course_manager {
                     FROM {course_modules} cm
                     JOIN {course_sections} cs ON cm.section = cs.id
                     WHERE cm.course = :courseid
-                    ORDER BY cs.section, FIND_IN_SET(cm.id, cs.sequence)";
+                    ORDER BY cs.section";
 
             $modules = $DB->get_records_sql($sql, ['courseid' => $fromcourseid]);
             debugging("Found " . count($modules) . " modules to copy", DEBUG_DEVELOPER);
