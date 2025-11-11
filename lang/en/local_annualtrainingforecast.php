@@ -65,3 +65,27 @@ $string['existingcourse'] = 'Select Existing Course';
 $string['newcourse'] = 'Create New Course';
 $string['courseselectiontype'] = 'Course Selection';
 $string['courseselectiontype_help'] = 'Choose whether to select an existing course or create a new one.';
+
+$string['ganttview'] = 'Gantt View';
+$string['reports'] = 'Reports';
+$string['courseupdated'] = 'Course updated successfully';
+$string['courseadded'] = 'Course added successfully';
+$string['instanceupdated'] = 'Iteration updated successfully';
+$string['instanceadded'] = 'Iteration added successfully';
+$string['cannotdeletecourse'] = 'Cannot delete course';
+$string['deletecoursewarning'] = 'This will also delete all iterations associated with this course.';
+$string['coursedeleted'] = 'Course deleted successfully';
+$string['deleteiterationwarning'] = 'This action cannot be undone.';
+$string['instancedeleted'] = 'Iteration deleted successfully';
+$string['addparentcourse'] = 'Add Parent Course';
+$string['nocourses'] = 'No courses found';
+$string['addcourseinstance'] = 'Add Course Instance';
+$string['courseduration'] = 'Course Duration';
+$string['createnewcourse'] = 'Create New Course';
+$string['selectexistingcourse'] = 'Select Existing Course';
+$string['coursesource'] = 'Course Source';
+$string['newcoursedetails'] = 'New Course Details';
+$string['coursedescription'] = 'Course Description';
+$string['existingcoursedetails'] = 'Existing Course Details';
+$string['selectcourse'] = 'Select Course';
+?>
