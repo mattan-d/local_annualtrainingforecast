@@ -111,7 +111,7 @@ if ($format === 'excel') {
     require_once($CFG->libdir . '/pdflib.php');
     
     // Create mPDF instance with A4 landscape and proper Hebrew font support
-    $mpdf = new \mPDF([
+    $mpdf = new \Mpdf\Mpdf([
         'mode' => 'utf-8',
         'format' => 'A4-L',
         'margin_left' => 10,
