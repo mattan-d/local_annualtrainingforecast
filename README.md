@@ -39,6 +39,6 @@ A Moodle local plugin for managing and visualizing annual training forecasts wit
 GPL v3 or later
 \`\`\`
 
-```plaintext file=".gitignore"
+\`\`\`plaintext file=".gitignore"
 /vendor/
 composer.lock

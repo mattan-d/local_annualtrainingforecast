@@ -35,27 +35,27 @@ DeepCopy helps you create deep copies (clones) of your objects. It is designed t
 
 Install with Composer:
 
-```
+\`\`\`
 composer require myclabs/deep-copy
-```
+\`\`\`
 
 Use it:
 
-```php
+\`\`\`php
 use DeepCopy\DeepCopy;
 
 $copier = new DeepCopy();
 $myCopy = $copier->copy($myObject);
-```
+\`\`\`
 
 
 ## Why?
 
 - How do you create copies of your objects?
 
-```php
+\`\`\`php
 $myCopy = clone $myObject;
-```
+\`\`\`
 
 - How do you create **deep** copies of your objects (i.e. copying also all the objects referenced in the properties)?
 
@@ -91,25 +91,25 @@ keeps a hash map of all instances and thus preserves the object graph.
 
 To use it:
 
-```php
+\`\`\`php
 use function DeepCopy\deep_copy;
 
 $copy = deep_copy($var);
-```
+\`\`\`
 
 Alternatively, you can create your own `DeepCopy` instance to configure it differently for example:
 
-```php
+\`\`\`php
 use DeepCopy\DeepCopy;
 
 $copier = new DeepCopy(true);
 
 $copy = $copier->copy($var);
-```
+\`\`\`
 
 You may want to roll your own deep copy function:
 
-```php
+\`\`\`php
 namespace Acme;
 
 use DeepCopy\DeepCopy;
@@ -124,7 +124,7 @@ function deep_copy($var)
     
     return $copier->copy($var);
 }
-```
+\`\`\`
 
 
 ## Going further
@@ -148,24 +148,24 @@ We provide some generic filters and matchers.
 
 The `PropertyNameMatcher` will match a property by its name:
 
-```php
+\`\`\`php
 use DeepCopy\Matcher\PropertyNameMatcher;
 
 // Will apply a filter to any property of any objects named "id"
 $matcher = new PropertyNameMatcher('id');
-```
+\`\`\`
 
 
 #### Specific property
 
 The `PropertyMatcher` will match a specific property of a specific class:
 
-```php
+\`\`\`php
 use DeepCopy\Matcher\PropertyMatcher;
 
 // Will apply a filter to the property "id" of any objects of the class "MyClass"
 $matcher = new PropertyMatcher('MyClass', 'id');
-```
+\`\`\`
 
 
 #### Type
@@ -173,12 +173,12 @@ $matcher = new PropertyMatcher('MyClass', 'id');
 The `TypeMatcher` will match any element by its type (instance of a class or any value that could be parameter of
 [gettype()](http://php.net/manual/en/function.gettype.php) function):
 
-```php
+\`\`\`php
 use DeepCopy\TypeMatcher\TypeMatcher;
 
 // Will apply a filter to any object that is an instance of Doctrine\Common\Collections\Collection
 $matcher = new TypeMatcher('Doctrine\Common\Collections\Collection');
-```
+\`\`\`
 
 
 ### Filters
@@ -195,7 +195,7 @@ Using the ([`ChainableFilter`](#chainablefilter-filter)) won't stop the chain of
 Let's say for example that you are copying a database record (or a Doctrine entity), so you want the copy not to have
 any ID:
 
-```php
+\`\`\`php
 use DeepCopy\DeepCopy;
 use DeepCopy\Filter\SetNullFilter;
 use DeepCopy\Matcher\PropertyNameMatcher;
@@ -209,14 +209,14 @@ $copier->addFilter(new SetNullFilter(), new PropertyNameMatcher('id'));
 $copy = $copier->copy($object);
 
 echo $copy->id; // null
-```
+\`\`\`
 
 
 #### `KeepFilter` (filter)
 
 If you want a property to remain untouched (for example, an association to an object):
 
-```php
+\`\`\`php
 use DeepCopy\DeepCopy;
 use DeepCopy\Filter\KeepFilter;
 use DeepCopy\Matcher\PropertyMatcher;
@@ -226,7 +226,7 @@ $copier->addFilter(new KeepFilter(), new PropertyMatcher('MyClass', 'category'))
 
 $copy = $copier->copy($object);
 // $copy->category has not been touched
-```
+\`\`\`
 
 
 #### `ChainableFilter` (filter)
@@ -239,7 +239,7 @@ You can use the `ChainableFilter` as a decorator of the proxy loader filter, whi
 the next ones may be applied).
 
 
-```php
+\`\`\`php
 use DeepCopy\DeepCopy;
 use DeepCopy\Filter\ChainableFilter;
 use DeepCopy\Filter\Doctrine\DoctrineProxyFilter;
@@ -254,14 +254,14 @@ $copier->addFilter(new SetNullFilter(), new PropertyNameMatcher('id'));
 $copy = $copier->copy($object);
 
 echo $copy->id; // null
-```
+\`\`\`
 
 
 #### `DoctrineCollectionFilter` (filter)
 
 If you use Doctrine and want to copy an entity, you will need to use the `DoctrineCollectionFilter`:
 
-```php
+\`\`\`php
 use DeepCopy\DeepCopy;
 use DeepCopy\Filter\Doctrine\DoctrineCollectionFilter;
 use DeepCopy\Matcher\PropertyTypeMatcher;
@@ -270,7 +270,7 @@ $copier = new DeepCopy();
 $copier->addFilter(new DoctrineCollectionFilter(), new PropertyTypeMatcher('Doctrine\Common\Collections\Collection'));
 
 $copy = $copier->copy($object);
-```
+\`\`\`
 
 
 #### `DoctrineEmptyCollectionFilter` (filter)
@@ -278,7 +278,7 @@ $copy = $copier->copy($object);
 If you use Doctrine and want to copy an entity who contains a `Collection` that you want to be reset, you can use the
 `DoctrineEmptyCollectionFilter`
 
-```php
+\`\`\`php
 use DeepCopy\DeepCopy;
 use DeepCopy\Filter\Doctrine\DoctrineEmptyCollectionFilter;
 use DeepCopy\Matcher\PropertyMatcher;
@@ -289,7 +289,7 @@ $copier->addFilter(new DoctrineEmptyCollectionFilter(), new PropertyMatcher('MyC
 $copy = $copier->copy($object);
 
 // $copy->myProperty will return an empty collection
-```
+\`\`\`
 
 
 #### `DoctrineProxyFilter` (filter)
@@ -302,7 +302,7 @@ before other filters are applied!**
 We recommend to decorate the `DoctrineProxyFilter` with the `ChainableFilter` to allow applying other filters to the
 cloned lazy loaded entities.
 
-```php
+\`\`\`php
 use DeepCopy\DeepCopy;
 use DeepCopy\Filter\Doctrine\DoctrineProxyFilter;
 use DeepCopy\Matcher\Doctrine\DoctrineProxyMatcher;
@@ -313,14 +313,14 @@ $copier->addFilter(new ChainableFilter(new DoctrineProxyFilter()), new DoctrineP
 $copy = $copier->copy($object);
 
 // $copy should now contain a clone of all entities, including those that were not yet fully loaded.
-```
+\`\`\`
 
 
 #### `ReplaceFilter` (type filter)
 
 1. If you want to replace the value of a property:
 
-```php
+\`\`\`php
 use DeepCopy\DeepCopy;
 use DeepCopy\Filter\ReplaceFilter;
 use DeepCopy\Matcher\PropertyMatcher;
@@ -334,11 +334,11 @@ $copier->addFilter(new ReplaceFilter($callback), new PropertyMatcher('MyClass', 
 $copy = $copier->copy($object);
 
 // $copy->title will contain the data returned by the callback, e.g. 'The title (copy)'
-```
+\`\`\`
 
 2. If you want to replace whole element:
 
-```php
+\`\`\`php
 use DeepCopy\DeepCopy;
 use DeepCopy\TypeFilter\ReplaceFilter;
 use DeepCopy\TypeMatcher\TypeMatcher;
@@ -352,7 +352,7 @@ $copier->addTypeFilter(new ReplaceFilter($callback), new TypeMatcher('MyClass'))
 $copy = $copier->copy([new MyClass, 'some string', new MyClass]);
 
 // $copy will contain ['MyClass', 'some string', 'MyClass']
-```
+\`\`\`
 
 
 The `$callback` parameter of the `ReplaceFilter` constructor accepts any PHP callable.
@@ -362,7 +362,7 @@ The `$callback` parameter of the `ReplaceFilter` constructor accepts any PHP cal
 
 Stop *DeepCopy* from recursively copying element, using standard `clone` instead:
 
-```php
+\`\`\`php
 use DeepCopy\DeepCopy;
 use DeepCopy\TypeFilter\ShallowCopyFilter;
 use DeepCopy\TypeMatcher\TypeMatcher;
@@ -376,7 +376,7 @@ $this->deepCopy->addTypeFilter(
 
 $myServiceWithMocks = new MyService(m::mock(MyDependency1::class), m::mock(MyDependency2::class));
 // All mocks will be just cloned, not deep copied
-```
+\`\`\`
 
 
 ## Edge cases
@@ -397,9 +397,9 @@ DeepCopy is distributed under the MIT license.
 
 Running the tests is simple:
 
-```php
+\`\`\`php
 vendor/bin/phpunit
-```
+\`\`\`
 
 ### Support
 

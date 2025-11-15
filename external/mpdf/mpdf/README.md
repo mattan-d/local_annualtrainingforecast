@@ -51,16 +51,16 @@ Installation
 
 Official installation method is via composer and its packagist package [mpdf/mpdf](https://packagist.org/packages/mpdf/mpdf).
 
-```
+\`\`\`
 $ composer require mpdf/mpdf
-```
+\`\`\`
 
 Usage
 =====
 
 The simplest usage (since version 7.0) of the library would be as follows:
 
-```php
+\`\`\`php
 <?php
 
 require_once __DIR__ . '/vendor/autoload.php';
@@ -69,7 +69,7 @@ $mpdf = new \Mpdf\Mpdf();
 $mpdf->WriteHTML('<h1>Hello world!</h1>');
 $mpdf->Output();
 
-```
+\`\`\`
 
 This will output the PDF inline to the browser as `application/pdf` Content-type.
 
@@ -86,12 +86,12 @@ The directory must have write permissions (mode `775` is recommended) for users 
 **Warning:** mPDF will clean up old temporary files in the temporary directory. Choose a path dedicated to mPDF only.
 
 
-```php
+\`\`\`php
 <?php
 
 $mpdf = new \Mpdf\Mpdf(['tempDir' => __DIR__ . '/tmp']);
 
-```
+\`\`\`
 
 By default, the temporary directory will be inside vendor directory and will have write permissions from
 `post_install` composer script.

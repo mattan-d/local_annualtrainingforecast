@@ -107,9 +107,10 @@ class course_manager {
      *
      * @param object $data Form data
      * @param int $parentcourseid Parent Moodle course ID
+     * @param bool $copymaterials Whether to copy materials from parent course
      * @return int New course ID
      */
-    public static function create_course_instance($data, $parentcourseid) {
+    public static function create_course_instance($data, $parentcourseid, $copymaterials = true) {
         global $CFG, $DB, $USER;
 
         // Get the parent course
@@ -152,8 +153,10 @@ class course_manager {
         // Create the course
         $newcourse = create_course($coursedata);
 
-        // Now copy content from the parent course
-        self::copy_course_content($parentcourseid, $newcourse->id);
+        if ($copymaterials) {
+            // Now copy content from the parent course
+            self::copy_course_content($parentcourseid, $newcourse->id);
+        }
 
         return $newcourse->id;
     }

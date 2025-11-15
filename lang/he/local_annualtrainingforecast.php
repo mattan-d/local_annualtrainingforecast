@@ -66,6 +66,11 @@ $string['newcourse'] = 'צור קורס חדש';
 $string['courseselectiontype'] = 'בחירת קורס';
 $string['courseselectiontype_help'] = 'בחר האם לבחור קורס קיים או ליצור קורס חדש.';
 
+$string['copymaterials'] = 'העתק חומרים מקורס האב';
+$string['copymaterials_help'] = 'אם מסומן, כל חומרי הקורס (פעילויות, משאבים וכו\') יועתקו מקורס האב למחזור החדש';
+$string['linkexisting'] = 'שייך למחזור מקורס קיים';
+$string['linkexisting_help'] = 'אם מסומן, מחזור זה ישויך לקורס קיים במערכת במקום ליצור חדש';
+
 $string['ganttview'] = 'תצוגת גאנט';
 $string['reports'] = 'דוחות';
 $string['courseupdated'] = 'הקורס עודכן בהצלחה';

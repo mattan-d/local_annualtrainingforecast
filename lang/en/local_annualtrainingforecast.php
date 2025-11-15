@@ -66,6 +66,11 @@ $string['newcourse'] = 'Create New Course';
 $string['courseselectiontype'] = 'Course Selection';
 $string['courseselectiontype_help'] = 'Choose whether to select an existing course or create a new one.';
 
+$string['copymaterials'] = 'Copy materials from parent course';
+$string['copymaterials_help'] = 'If checked, all course materials (activities, resources, etc.) will be copied from the parent course to this new iteration';
+$string['linkexisting'] = 'Link to existing course';
+$string['linkexisting_help'] = 'If checked, this iteration will be linked to an existing course in the system instead of creating a new one';
+
 $string['ganttview'] = 'Gantt View';
 $string['reports'] = 'Reports';
 $string['courseupdated'] = 'Course updated successfully';

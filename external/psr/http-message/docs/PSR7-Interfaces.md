@@ -127,4 +127,3 @@ Same methods as `Psr\Http\Message\MessageInterface`  + the following methods:
 
 > `RequestInterface`, `ServerRequestInterface`, `ResponseInterface` extend `MessageInterface`  because the `Request` and the `Response` are `HTTP Messages`.
 > When using `ServerRequestInterface`, both `RequestInterface` and `Psr\Http\Message\MessageInterface` methods are considered.
-

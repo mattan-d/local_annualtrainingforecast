@@ -216,16 +216,31 @@ if ($action == 'add' || $action == 'edit') {
             } else {
                 // Add new iteration
                 try {
-                    // Get the parent course's Moodle course ID
-                    $parentMoodleCourseId = \course_manager::get_moodle_course_id_for_parent($parentid);
+                    if (!empty($data->linkexisting) && !empty($data->existingcourseid)) {
+                        // Link to existing course
+                        $moodlecourseid = $data->existingcourseid;
+                        
+                        // Verify the course exists
+                        $existingcourse = $DB->get_record('course', ['id' => $moodlecourseid], '*', MUST_EXIST);
+                        
+                        // Update the course dates
+                        $existingcourse->startdate = $data->startdate;
+                        $existingcourse->enddate = $data->enddate;
+                        $existingcourse->timemodified = $now;
+                        $DB->update_record('course', $existingcourse);
+                    } else {
+                        // Create new course
+                        // Get the parent course's Moodle course ID
+                        $parentMoodleCourseId = \course_manager::get_moodle_course_id_for_parent($parentid);
 
-                    if (!$parentMoodleCourseId) {
-                        \core\notification::error('Parent course does not have an associated Moodle course');
-                        redirect(new moodle_url('/local/annualtrainingforecast/manage.php'));
+                        if (!$parentMoodleCourseId) {
+                            \core\notification::error('Parent course does not have an associated Moodle course');
+                            redirect(new moodle_url('/local/annualtrainingforecast/manage.php'));
+                        }
+
+                        $copymaterials = !empty($data->copymaterials);
+                        $moodlecourseid = \course_manager::create_course_instance($data, $parentMoodleCourseId, $copymaterials);
                     }
-
-                    // Create a new Moodle course by cloning the parent
-                    $moodlecourseid = \course_manager::create_course_instance($data, $parentMoodleCourseId);
 
                     // Add record to our custom table
                     $record = new stdClass();
@@ -245,8 +260,7 @@ if ($action == 'add' || $action == 'edit') {
                         \core\notification::success(get_string('instanceadded', 'local_annualtrainingforecast'));
                     } else {
                         \core\notification::error('Failed to add course instance');
-                        // If we failed to add to our table, delete the Moodle course
-                        if ($moodlecourseid) {
+                        if (empty($data->linkexisting) && $moodlecourseid) {
                             delete_course($moodlecourseid, false);
                         }
                     }

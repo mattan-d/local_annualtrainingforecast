@@ -13,8 +13,8 @@ Require the trait.
 
 In your code, you no longer have to set a $logger property on your classes, since that comes with the trait, and you do not need to implement the `function setLogger()` method, since that also comes along with the trait. 
 
-```php
+\`\`\`php
 use PsrLogAwareTrait;
-```
+\`\`\`
         
 Will allow you to call `setLogger()` in your classes and fulfil the requirements of the PsrLoggerAwareInterface implementation.

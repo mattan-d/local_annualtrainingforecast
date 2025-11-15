@@ -88,6 +88,38 @@ class iteration_form extends \moodleform {
             }
         }
 
+        $mform->addElement('advcheckbox', 'copymaterials', 
+            get_string('copymaterials', 'local_annualtrainingforecast'),
+            get_string('copymaterials_help', 'local_annualtrainingforecast'));
+        $mform->setDefault('copymaterials', 1); // Default to checked
+        
+        $mform->addElement('advcheckbox', 'linkexisting', 
+            get_string('linkexisting', 'local_annualtrainingforecast'),
+            get_string('linkexisting_help', 'local_annualtrainingforecast'));
+        $mform->setDefault('linkexisting', 0);
+        
+        // Get all available courses (excluding site course)
+        $courses = $DB->get_records_sql(
+            "SELECT id, fullname, shortname, category 
+             FROM {course} 
+             WHERE id > 1 
+             ORDER BY fullname"
+        );
+        
+        $courseoptions = [0 => get_string('choosedots')];
+        foreach ($courses as $c) {
+            $category = \core_course_category::get($c->category, IGNORE_MISSING);
+            $categoryname = $category ? $category->get_formatted_name() : '';
+            $courseoptions[$c->id] = $categoryname . ' / ' . format_string($c->fullname) . ' (' . $c->shortname . ')';
+        }
+        
+        $mform->addElement('autocomplete', 'existingcourseid', 
+            get_string('existingcourse', 'local_annualtrainingforecast'), 
+            $courseoptions);
+        $mform->hideIf('existingcourseid', 'linkexisting', 'notchecked');
+        
+        $mform->hideIf('copymaterials', 'linkexisting', 'checked');
+
         // Start date
         $mform->addElement('date_selector', 'startdate', get_string('startdate', 'local_annualtrainingforecast'));
         $mform->addRule('startdate', get_string('required'), 'required', null, 'client');
@@ -182,6 +214,10 @@ class iteration_form extends \moodleform {
             } catch (\Exception $e) {
                 $errors['category'] = get_string('invalidcategoryid', 'error');
             }
+        }
+        
+        if (!empty($data['linkexisting']) && empty($data['existingcourseid'])) {
+            $errors['existingcourseid'] = get_string('required');
         }
 
         return $errors;

@@ -10,16 +10,16 @@ describes a logger. See the specification for more details.
 Installation
 ------------
 
-```bash
+\`\`\`bash
 composer require psr/log
-```
+\`\`\`
 
 Usage
 -----
 
 If you need a logger, you can use the interface like this:
 
-```php
+\`\`\`php
 <?php
 
 use Psr\Log\LoggerInterface;
@@ -48,7 +48,7 @@ class Foo
         // do something useful
     }
 }
-```
+\`\`\`
 
 You can then pick one of the implementations of the interface to get a logger.
 

@@ -22,51 +22,51 @@ yourself.
 
 To use FPDI with FPDF include following in your composer.json file:
 
-```json
+\`\`\`json
 {
     "require": {
         "setasign/fpdf": "1.8.*",
         "setasign/fpdi": "^2.5"
     }
 }
-```
+\`\`\`
 
 If you want to use TCPDF, you have to update your composer.json to:
 
-```json
+\`\`\`json
 {
     "require": {
         "tecnickcom/tcpdf": "6.6.*",
         "setasign/fpdi": "^2.5"
     }
 }
-```
+\`\`\`
 
 If you want to use tFPDF, you have to update your composer.json to:
 
-```json
+\`\`\`json
 {
     "require": {
         "setasign/tfpdf": "1.33.*",
         "setasign/fpdi": "^2.3"
     }
 }
-```
+\`\`\`
 
 ## Manual Installation
 
 If you do not use composer, just require the autoload.php in the /src folder:
 
-```php
+\`\`\`php
 require_once('src/autoload.php');
-```
+\`\`\`
 
 If you have a PSR-4 autoloader implemented, just register the src path as follows:
-```php
+\`\`\`php
 $loader = new \Example\Psr4AutoloaderClass;
 $loader->register();
 $loader->addNamespace('setasign\Fpdi', 'path/to/src/');
-```
+\`\`\`
 
 ## Changes to Version 1
 
@@ -101,7 +101,7 @@ version 2:
 
 A simple example, that imports a single page and places this onto a new created page:
 
-```php
+\`\`\`php
 <?php
 use setasign\Fpdi\Fpdi;
 // or for usage with TCPDF:
@@ -125,6 +125,6 @@ $tplId = $pdf->importPage(1);
 $pdf->useTemplate($tplId, 10, 10, 100);
 
 $pdf->Output();            
-```
+\`\`\`
 
 A full end-user documentation and API reference is available [here](https://manuals.setasign.com/fpdi-manual/).

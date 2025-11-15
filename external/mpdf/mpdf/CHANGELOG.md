@@ -358,12 +358,12 @@ Bug Fixes & Minor Additions
     minimum cell width(s) as long as $keep_table_proportions = true
 - Tables - if using packTableData, and borders-collapse, wider border is overwriting content of adjacent cell
     Test case:
-    ```
+    \`\`\`
     <table style="border-collapse: collapse;">
     <tr><td style="border-bottom: 42px solid #0FF; "> Hallo world </td></tr>
     <tr><td style="border-top: 14px solid #0F0; "> Hallo world </td></tr>
     </table>
-    ```
+    \`\`\`
 - Images - image height is reset proportional to original if width is set to maximum e.g. `<img width="100%" height="20mm">`
 - URL handling changed to work with special characters in path fragments; affects `<a>` links, `<img>` images and
     CSS url() e.g background-image
