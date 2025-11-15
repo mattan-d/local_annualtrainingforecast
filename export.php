@@ -108,26 +108,28 @@ if ($format === 'excel') {
         3 => get_string('status_cancelled', 'local_annualtrainingforecast')
     ];
 
-    // Generate PDF directly without using Moodle's output
     require_once($CFG->libdir . '/pdflib.php');
-    $pdf = new \pdf();
-    $pdf->setPrintHeader(false);
-    $pdf->setPrintFooter(false);
-
-    // Set A4 page format
-    $pdf->AddPage('L', 'A4'); // Landscape A4
-
-    // Set margins to ensure content fits
-    $pdf->SetMargins(10, 10, 10);
-
-    // Set auto page break to ensure content isn't cut off
-    $pdf->SetAutoPageBreak(true, 10);
+    
+    // Create mPDF instance with A4 landscape and proper Hebrew font support
+    $mpdf = new \mPDF([
+        'mode' => 'utf-8',
+        'format' => 'A4-L',
+        'margin_left' => 10,
+        'margin_right' => 10,
+        'margin_top' => 10,
+        'margin_bottom' => 10,
+        'margin_header' => 0,
+        'margin_footer' => 0,
+        'autoScriptToLang' => true,
+        'autoLangToFont' => true,
+        'default_font' => 'dejavusans'
+    ]);
 
     // Build HTML content directly
     $html = '
     <style>
         body { 
-            font-family: freesans, sans-serif; 
+            font-family: dejavusans, sans-serif; 
             font-size: 10pt;
             line-height: 1.2;
         }
@@ -208,8 +210,8 @@ if ($format === 'excel') {
             get_string('notcompleted', 'local_annualtrainingforecast');
 
         $html .= '<tr>';
-        $html .= '<td>' . $item['name'] . '</td>';
-        $html .= '<td>' . $item['parentname'] . '</td>';
+        $html .= '<td>' . htmlspecialchars($item['name']) . '</td>';
+        $html .= '<td>' . htmlspecialchars($item['parentname']) . '</td>';
         $html .= '<td>' . userdate($item['start'], get_string('strftimedatefullshort', 'core_langconfig')) . '</td>';
         $html .= '<td>' . userdate($item['end'], get_string('strftimedatefullshort', 'core_langconfig')) . '</td>';
         $html .= '<td>' . $statusStrings[$item['status']] . '</td>';
@@ -252,8 +254,8 @@ if ($format === 'excel') {
 
         // Course name cell
         $html .= '<td style="width: 180px;">';
-        $html .= '<strong>' . $item['name'] . '</strong><br>';
-        $html .= '<small>' . $item['parentname'] . '</small>';
+        $html .= '<strong>' . htmlspecialchars($item['name']) . '</strong><br>';
+        $html .= '<small>' . htmlspecialchars($item['parentname']) . '</small>';
         $html .= '</td>';
 
         // Calculate which cells should be colored
@@ -299,9 +301,9 @@ if ($format === 'excel') {
     }
     $html .= '</table>';
 
-    // Write the HTML content
-    $pdf->WriteHTML($html);
+    $mpdf->WriteHTML($html);
 
     $filename = 'training_forecast_' . $viewtype . '_' . date('Y-m-d') . '.pdf';
-    $pdf->Output($filename, 'D');
+    $mpdf->Output($filename, 'D');
+    exit;
 }
