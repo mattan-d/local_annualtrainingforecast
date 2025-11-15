@@ -128,7 +128,7 @@ if ($format === 'excel') {
     $html = '
     <style>
         body { 
-            font-family: dejavusans, sans-serif; 
+            direction: ' . (current_language() == 'he' || current_language() == 'en' ? 'rtl' : 'ltr') . ';
             font-size: 10pt;
             line-height: 1.2;
         }
