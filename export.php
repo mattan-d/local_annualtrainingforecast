@@ -26,7 +26,7 @@ require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
 require_once($CFG->dirroot . '/local/annualtrainingforecast/classes/api.php');
 
-require_once(__DIR__ . '/vendor/autoload.php');
+require_once(__DIR__ . '/external/autoload.php');
 
 // Check permissions
 require_login();
