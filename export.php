@@ -48,8 +48,8 @@ if (!in_array($viewtype, $validviews)) {
 
 // Export based on format
 if ($format === 'excel') {
-    $filepath = \api::export_to_excel($viewtype);
-    send_file($filepath, basename($filepath), 0, 0, true, true, 'application/vnd.ms-excel');
+    \api::export_to_excel($viewtype);
+    exit;
 } else if ($format === 'pdf') {
     // For PDF export, we'll render the Gantt chart to a PDF
     $data = \api::get_gantt_data($viewtype);

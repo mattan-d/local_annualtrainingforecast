@@ -217,7 +217,7 @@ class api {
      * Export Gantt data to Excel
      *
      * @param string $viewtype
-     * @return string Path to the generated Excel file
+     * @return void Sends the file directly to the browser
      */
     public static function export_to_excel($viewtype) {
         global $CFG;
@@ -225,8 +225,8 @@ class api {
 
         $data = self::get_gantt_data($viewtype);
 
-        // Create workbook
-        $workbook = new \MoodleExcelWorkbook('training_forecast_' . $viewtype . '_' . date('Y-m-d'));
+        $filename = 'training_forecast_' . $viewtype . '_' . date('Y-m-d') . '.xlsx';
+        $workbook = new \MoodleExcelWorkbook($filename);
         $worksheet = $workbook->add_worksheet(get_string('pluginname', 'local_annualtrainingforecast'));
 
         // Add headers
@@ -269,8 +269,6 @@ class api {
             $row++;
         }
 
-        // Close workbook and return path
         $workbook->close();
-        return $workbook->get_filepath();
     }
 }
