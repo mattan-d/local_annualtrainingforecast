@@ -128,7 +128,7 @@ if ($format === 'excel') {
     $html = '
     <style>
         body { 
-            direction: ' . (current_language() == 'he' || current_language() == 'en' ? 'rtl' : 'ltr') . ';
+            direction: ' . (current_language() == 'he' || current_language() == 'ar' ? 'rtl' : 'ltr') . ';
             font-size: 10pt;
             line-height: 1.2;
         }
@@ -140,7 +140,7 @@ if ($format === 'excel') {
         th, td { 
             border: 1px solid #ddd; 
             padding: 5px; 
-            text-align: left; 
+            text-align: right; 
             font-size: 9pt;
         }
         th { 
@@ -222,7 +222,7 @@ if ($format === 'excel') {
     $html .= '<div class="center subtitle">' . get_string('ganttview', 'local_annualtrainingforecast') . '</div>';
 
     // Legend - place it above the Gantt chart for better layout
-    $html .= '<table class="legend-table">';
+    $html .= '<table class="legend-table" style="width: 100%;">';
     $html .= '<tr>';
     $html .= '<td style="background-color: ' . $statusColors[0] . ';">' . $statusStrings[0] . '</td>';
     $html .= '<td style="background-color: ' . $statusColors[1] . ';">' . $statusStrings[1] . '</td>';
@@ -300,6 +300,8 @@ if ($format === 'excel') {
     }
     $html .= '</table>';
 
+/*    echo $html;
+    die;*/
     $mpdf->WriteHTML($html);
 
     $filename = 'training_forecast_' . $viewtype . '_' . date('Y-m-d') . '.pdf';
