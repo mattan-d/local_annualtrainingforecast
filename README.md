@@ -1,30 +1,44 @@
-# Archive
+# Annual Training Forecast - Moodle Plugin
 
-*Automatically synced with your [v0.dev](https://v0.dev) deployments*
+A Moodle local plugin for managing and visualizing annual training forecasts with Gantt chart views.
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/mattan-centricappcs-projects/v0-archive)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.dev-black?style=for-the-badge)](https://v0.dev/chat/projects/oMfQLS3cPzx)
+## Features
 
-## Overview
+- Create and manage parent courses
+- Create course iterations with scheduling
+- Visual Gantt chart display (year/half-year/quarterly views)
+- Export to Excel and PDF formats
+- Status tracking and completion monitoring
+- Reports and analytics
 
-This repository will stay in sync with your deployed chats on [v0.dev](https://v0.dev).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.dev](https://v0.dev).
+## Installation
 
-## Deployment
+1. Clone or download this plugin to your Moodle's `local/annualtrainingforecast` directory
+2. Install Composer dependencies:
+   \`\`\`bash
+   cd local/annualtrainingforecast
+   composer install
+   \`\`\`
+3. Visit Site Administration > Notifications to complete the installation
 
-Your project is live at:
+## Requirements
 
-**[https://vercel.com/mattan-centricappcs-projects/v0-archive](https://vercel.com/mattan-centricappcs-projects/v0-archive)**
+- Moodle 3.11 or higher
+- PHP 7.4 or higher
+- Composer (for mPDF dependency)
 
-## Build your app
+## Usage
 
-Continue building your app on:
+1. Navigate to Site Administration > Plugins > Local plugins > Annual Training Forecast
+2. Add parent courses
+3. Create iterations for each parent course
+4. View the Gantt chart and export data as needed
 
-**[https://v0.dev/chat/projects/oMfQLS3cPzx](https://v0.dev/chat/projects/oMfQLS3cPzx)**
+## License
 
-## How It Works
+GPL v3 or later
+\`\`\`
 
-1. Create and modify your project using [v0.dev](https://v0.dev)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+```plaintext file=".gitignore"
+/vendor/
+composer.lock

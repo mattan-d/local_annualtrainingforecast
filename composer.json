@@ -1,0 +1,12 @@
+{
+    "name": "local/annualtrainingforecast",
+    "description": "Annual Training Forecast plugin for Moodle",
+    "type": "moodle-local",
+    "require": {
+        "mpdf/mpdf": "^8.2"
+    },
+    "config": {
+        "vendor-dir": "vendor",
+        "optimize-autoloader": true
+    }
+}

@@ -26,6 +26,8 @@ require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
 require_once($CFG->dirroot . '/local/annualtrainingforecast/classes/api.php');
 
+require_once(__DIR__ . '/vendor/autoload.php');
+
 // Check permissions
 require_login();
 $context = context_system::instance();
@@ -108,9 +110,6 @@ if ($format === 'excel') {
         3 => get_string('status_cancelled', 'local_annualtrainingforecast')
     ];
 
-    require_once($CFG->libdir . '/pdflib.php');
-    
-    // Create mPDF instance with A4 landscape and proper Hebrew font support
     $mpdf = new \Mpdf\Mpdf([
         'mode' => 'utf-8',
         'format' => 'A4-L',
