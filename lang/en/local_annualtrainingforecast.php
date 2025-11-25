@@ -93,4 +93,5 @@ $string['newcoursedetails'] = 'New Course Details';
 $string['coursedescription'] = 'Course Description';
 $string['existingcoursedetails'] = 'Existing Course Details';
 $string['selectcourse'] = 'Select Course';
+$string['viewcourse'] = 'View Course';
 ?>

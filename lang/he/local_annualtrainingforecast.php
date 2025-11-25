@@ -93,3 +93,4 @@ $string['newcoursedetails'] = 'פרטי קורס חדש';
 $string['coursedescription'] = 'תיאור הקורס';
 $string['existingcoursedetails'] = 'פרטי קורס קיים';
 $string['selectcourse'] = 'בחר קורס';
+$string['viewcourse'] = 'צפה בקורס';
