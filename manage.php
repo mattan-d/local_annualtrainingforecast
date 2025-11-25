@@ -418,8 +418,8 @@ if (($action == 'add' || $action == 'edit') && isset($form)) {
             // Link to Moodle course if it exists
             if (!empty($course->moodlecourseid)) {
                 $viewcourseurl = new moodle_url('/course/view.php', ['id' => $course->moodlecourseid]);
-                echo html_writer::link($viewcourseurl, $OUTPUT->pix_icon('i/course', get_string('viewcourse')),
-                    ['class' => 'btn btn-sm btn-info', 'title' => get_string('viewcourse'), 'target' => '_blank']);
+                echo html_writer::link($viewcourseurl, $OUTPUT->pix_icon('i/course', get_string('viewcourse', 'local_annualtrainingforecast')),
+                    ['class' => 'btn btn-sm btn-info', 'title' => get_string('viewcourse', 'local_annualtrainingforecast'), 'target' => '_blank']);
                 echo ' ';
             }
 
@@ -501,8 +501,8 @@ if (($action == 'add' || $action == 'edit') && isset($form)) {
                     // Link to Moodle course if it exists
                     if (!empty($iteration->moodlecourseid)) {
                         $viewcourseurl = new moodle_url('/course/view.php', ['id' => $iteration->moodlecourseid]);
-                        echo html_writer::link($viewcourseurl, $OUTPUT->pix_icon('i/course', get_string('viewcourse')),
-                            ['class' => 'btn btn-sm btn-info', 'title' => get_string('viewcourse'), 'target' => '_blank']);
+                        echo html_writer::link($viewcourseurl, $OUTPUT->pix_icon('i/course', get_string('viewcourse', 'local_annualtrainingforecast')),
+                            ['class' => 'btn btn-sm btn-info', 'title' => get_string('viewcourse', 'local_annualtrainingforecast'), 'target' => '_blank']);
                         echo ' ';
                     }
 
