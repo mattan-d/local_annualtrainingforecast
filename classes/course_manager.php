@@ -282,13 +282,8 @@ class course_manager {
             }
             if ($plan->setting_exists('questionbank')) {
                 $setting = $plan->get_setting('questionbank');
-                // Make sure the setting is not locked before changing it
-                if (!$setting->is_locked()) {
-                    $setting->set_value(true);
-                    debugging("Root-level question bank backup setting enabled", DEBUG_DEVELOPER);
-                } else {
-                    debugging("Question bank setting is locked, cannot enable", DEBUG_DEVELOPER);
-                }
+                $setting->set_value(true);
+                debugging("Root-level question bank backup setting enabled", DEBUG_DEVELOPER);
             } else {
                 debugging("Question bank setting does not exist at root level", DEBUG_DEVELOPER);
             }
@@ -307,17 +302,13 @@ class course_manager {
                     
                     // Enable question bank for activities
                     if ($settingname == 'questionbank') {
-                        if (!$setting->is_locked()) {
-                            $setting->set_value(true);
-                            debugging("Activity-level question bank enabled for task: " . $task->get_name(), DEBUG_DEVELOPER);
-                        }
+                        $setting->set_value(true);
+                        debugging("Activity-level question bank enabled for task: " . $task->get_name(), DEBUG_DEVELOPER);
                     }
                     
                     // Disable user info for activities
                     if ($settingname == 'userinfo') {
-                        if (!$setting->is_locked()) {
-                            $setting->set_value(false);
-                        }
+                        $setting->set_value(false);
                     }
                 }
             }
@@ -390,13 +381,8 @@ class course_manager {
             }
             if ($plan->setting_exists('questionbank')) {
                 $setting = $plan->get_setting('questionbank');
-                // Make sure the setting is not locked before changing it
-                if (!$setting->is_locked()) {
-                    $setting->set_value(true);
-                    debugging("Root-level question bank restore setting enabled", DEBUG_DEVELOPER);
-                } else {
-                    debugging("Question bank restore setting is locked, cannot enable", DEBUG_DEVELOPER);
-                }
+                $setting->set_value(true);
+                debugging("Root-level question bank restore setting enabled", DEBUG_DEVELOPER);
             } else {
                 debugging("Question bank setting does not exist at root level for restore", DEBUG_DEVELOPER);
             }
@@ -415,17 +401,13 @@ class course_manager {
                     
                     // Enable question bank for activities
                     if ($settingname == 'questionbank') {
-                        if (!$setting->is_locked()) {
-                            $setting->set_value(true);
-                            debugging("Activity-level question bank restore enabled for task: " . $task->get_name(), DEBUG_DEVELOPER);
-                        }
+                        $setting->set_value(true);
+                        debugging("Activity-level question bank restore enabled for task: " . $task->get_name(), DEBUG_DEVELOPER);
                     }
                     
                     // Disable user info for activities
                     if ($settingname == 'userinfo') {
-                        if (!$setting->is_locked()) {
-                            $setting->set_value(false);
-                        }
+                        $setting->set_value(false);
                     }
                 }
             }
