@@ -357,6 +357,9 @@ class course_manager {
             if ($plan->setting_exists('grade_histories')) {
                 $plan->get_setting('grade_histories')->set_value(false);
             }
+            if ($plan->setting_exists('questionbank')) {
+                $plan->get_setting('questionbank')->set_value(true);
+            }
             if ($plan->setting_exists('groups')) {
                 $plan->get_setting('groups')->set_value(false);
             }
