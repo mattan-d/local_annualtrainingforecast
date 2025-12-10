@@ -94,4 +94,15 @@ $string['coursedescription'] = 'Course Description';
 $string['existingcoursedetails'] = 'Existing Course Details';
 $string['selectcourse'] = 'Select Course';
 $string['viewcourse'] = 'View Course';
+
+$string['previewiteration'] = 'Preview Iteration';
+$string['iterationdetails'] = 'Iteration Details';
+$string['contenttocopy'] = 'Content to Copy';
+$string['activitieslist'] = 'Activities List';
+$string['confirmcreation'] = 'Confirm Creation';
+$string['backtoedit'] = 'Back to Edit';
+$string['previewcoursedetails'] = 'Course Details Preview';
+$string['questionbankitems'] = 'Question Bank Items';
+$string['sections'] = 'Sections';
+$string['activities'] = 'Activities';
 ?>
