@@ -280,13 +280,18 @@ class course_manager {
             if ($plan->setting_exists('grade_histories')) {
                 $plan->get_setting('grade_histories')->set_value(false);
             }
+            
             $questionbankenabled = false;
             foreach (['questionbank', 'questions', 'question_bank'] as $settingname) {
-                if ($plan->setting_exists($settingname)) {
-                    $plan->get_setting($settingname)->set_value(true);
-                    debugging("Question bank backup setting '{$settingname}' enabled", DEBUG_DEVELOPER);
-                    $questionbankenabled = true;
-                    break;
+                try {
+                    if (method_exists($plan, 'setting_exists') && $plan->setting_exists($settingname)) {
+                        $plan->get_setting($settingname)->set_value(true);
+                        debugging("Question bank backup setting '{$settingname}' enabled", DEBUG_DEVELOPER);
+                        $questionbankenabled = true;
+                        break;
+                    }
+                } catch (Exception $e) {
+                    debugging("Error checking question bank setting '{$settingname}': " . $e->getMessage(), DEBUG_DEVELOPER);
                 }
             }
             if (!$questionbankenabled) {
@@ -383,13 +388,18 @@ class course_manager {
             if ($plan->setting_exists('grade_histories')) {
                 $plan->get_setting('grade_histories')->set_value(false);
             }
+            
             $questionbankenabled = false;
             foreach (['questionbank', 'questions', 'question_bank'] as $settingname) {
-                if ($plan->setting_exists($settingname)) {
-                    $plan->get_setting($settingname)->set_value(true);
-                    debugging("Question bank restore setting '{$settingname}' enabled", DEBUG_DEVELOPER);
-                    $questionbankenabled = true;
-                    break;
+                try {
+                    if (method_exists($plan, 'setting_exists') && $plan->setting_exists($settingname)) {
+                        $plan->get_setting($settingname)->set_value(true);
+                        debugging("Question bank restore setting '{$settingname}' enabled", DEBUG_DEVELOPER);
+                        $questionbankenabled = true;
+                        break;
+                    }
+                } catch (Exception $e) {
+                    debugging("Error checking question bank restore setting '{$settingname}': " . $e->getMessage(), DEBUG_DEVELOPER);
                 }
             }
             if (!$questionbankenabled) {
