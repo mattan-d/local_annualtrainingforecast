@@ -338,8 +338,18 @@ class course_manager {
 
             // Now restore to the destination course
             debugging("Restoring backup to course {$tocourseid}", DEBUG_DEVELOPER);
+            
+            // Extract the backup file to get the backup id
+            $fb = get_file_packer('application/vnd.moodle.backup');
+            $backupid = restore_controller::get_tempdir_name($tocourseid, $USER->id);
+            $path = make_backup_temp_directory($backupid);
+            
+            debugging("Extracting backup to {$path}", DEBUG_DEVELOPER);
+            $file->extract_to_pathname($fb, $path);
+
+            // Create restore controller using the backup id
             $rc = new \restore_controller(
-                $backupfilepath,
+                $backupid,
                 $tocourseid,
                 \backup::INTERACTIVE_NO,
                 \backup::MODE_GENERAL,
@@ -352,8 +362,12 @@ class course_manager {
                 $rc->convert();
             }
 
-            // Configure the restore settings
             $plan = $rc->get_plan();
+            
+            if (!$plan) {
+                throw new \moodle_exception('restorefailed', 'local_annualtrainingforecast', 
+                    '', null, 'Failed to get restore plan');
+            }
 
             if ($plan->setting_exists('users')) {
                 $plan->get_setting('users')->set_value(false);
