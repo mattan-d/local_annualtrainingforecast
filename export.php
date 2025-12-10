@@ -121,7 +121,8 @@ if ($format === 'excel') {
         'margin_footer' => 0,
         'autoScriptToLang' => true,
         'autoLangToFont' => true,
-        'default_font' => 'dejavusans'
+        'default_font' => 'dejavusans',
+        'tempDir' => make_temp_directory('mpdf')
     ]);
 
     // Build HTML content directly
