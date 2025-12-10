@@ -280,11 +280,6 @@ class course_manager {
             if ($plan->setting_exists('grade_histories')) {
                 $plan->get_setting('grade_histories')->set_value(false);
             }
-            // Ensure question bank is included
-            if ($plan->setting_exists('questionbank')) {
-                $plan->get_setting('questionbank')->set_value(true);
-                debugging("Question bank backup setting enabled", DEBUG_DEVELOPER);
-            }
             if ($plan->setting_exists('groups')) {
                 $plan->get_setting('groups')->set_value(false);
             }
@@ -293,17 +288,27 @@ class course_manager {
             }
 
             foreach ($plan->get_tasks() as $task) {
-                $settings = $task->get_settings();
-                foreach ($settings as $setting) {
-                    if ($setting->get_name() == 'questionbank' || 
-                        $setting->get_name() == 'userinfo') {
-                        if ($setting->get_name() == 'questionbank') {
-                            $setting->set_value(true);
-                            debugging("Activity-level question bank enabled for task: " . $task->get_name(), DEBUG_DEVELOPER);
-                        } else if ($setting->get_name() == 'userinfo') {
+                // For quiz activities, ensure included is true and userinfo is false
+                if ($task instanceof \backup_activity_task) {
+                    $settings = $task->get_settings();
+                    
+                    // First set included to true for the activity
+                    if ($task->setting_exists('included')) {
+                        $task->get_setting('included')->set_value(true);
+                    }
+                    
+                    foreach ($settings as $setting) {
+                        $settingname = $setting->get_name();
+                        
+                        // Enable question inclusion for quizzes
+                        if ($settingname == 'userinfo') {
                             $setting->set_value(false);
+                        } else if ($settingname == 'included') {
+                            $setting->set_value(true);
                         }
                     }
+                    
+                    debugging("Activity {$task->get_name()} configured for backup with questions", DEBUG_DEVELOPER);
                 }
             }
 
@@ -321,7 +326,6 @@ class course_manager {
             // Clean up the backup controller
             $bc->destroy();
 
-            // Now restore to the destination course
             debugging("Restoring backup to course {$tocourseid}", DEBUG_DEVELOPER);
             $rc = new \restore_controller(
                 $backupfilepath,
@@ -373,11 +377,6 @@ class course_manager {
             if ($plan->setting_exists('grade_histories')) {
                 $plan->get_setting('grade_histories')->set_value(false);
             }
-            // Ensure question bank is restored
-            if ($plan->setting_exists('questionbank')) {
-                $plan->get_setting('questionbank')->set_value(true);
-                debugging("Question bank restore setting enabled", DEBUG_DEVELOPER);
-            }
             if ($plan->setting_exists('groups')) {
                 $plan->get_setting('groups')->set_value(false);
             }
@@ -386,17 +385,25 @@ class course_manager {
             }
 
             foreach ($plan->get_tasks() as $task) {
-                $settings = $task->get_settings();
-                foreach ($settings as $setting) {
-                    if ($setting->get_name() == 'questionbank' || 
-                        $setting->get_name() == 'userinfo') {
-                        if ($setting->get_name() == 'questionbank') {
-                            $setting->set_value(true);
-                            debugging("Activity-level question bank restore enabled for task: " . $task->get_name(), DEBUG_DEVELOPER);
-                        } else if ($setting->get_name() == 'userinfo') {
+                if ($task instanceof \restore_activity_task) {
+                    $settings = $task->get_settings();
+                    
+                    // Ensure the activity is included
+                    if ($task->setting_exists('included')) {
+                        $task->get_setting('included')->set_value(true);
+                    }
+                    
+                    foreach ($settings as $setting) {
+                        $settingname = $setting->get_name();
+                        
+                        if ($settingname == 'userinfo') {
                             $setting->set_value(false);
+                        } else if ($settingname == 'included') {
+                            $setting->set_value(true);
                         }
                     }
+                    
+                    debugging("Activity {$task->get_name()} configured for restore with questions", DEBUG_DEVELOPER);
                 }
             }
 
