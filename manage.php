@@ -811,7 +811,6 @@ function display_iteration_preview($data, $form, $parentid) {
         echo html_writer::tag('p', get_string('nocontent', 'local_annualtrainingforecast'), ['class' => 'alert alert-warning']);
     }
     
-    // Create a confirmation form
     echo html_writer::start_tag('form', [
         'method' => 'post',
         'action' => new moodle_url('/local/annualtrainingforecast/manage.php'),
@@ -848,9 +847,12 @@ function display_iteration_preview($data, $form, $parentid) {
         'value' => '2'
     ]);
     
-    // Add all form data as hidden fields
     foreach ((array)$data as $key => $value) {
         if (!is_object($value) && !is_array($value)) {
+            // Skip certain keys that are handled separately
+            if ($key === 'submitbutton' || $key === '_qf__') {
+                continue;
+            }
             echo html_writer::empty_tag('input', [
                 'type' => 'hidden',
                 'name' => $key,

@@ -105,4 +105,11 @@ $string['previewcoursedetails'] = 'Course Details Preview';
 $string['questionbankitems'] = 'Question Bank Items';
 $string['sections'] = 'Sections';
 $string['activities'] = 'Activities';
+$string['createinstance'] = 'Create Instance';
+$string['previewcourse'] = 'Preview Course';
+$string['coursedetails'] = 'Course Details';
+$string['createcourse'] = 'Create Course';
+$string['linkingtoexisting'] = 'This will link to an existing course without copying content';
+$string['nocontent'] = 'No content will be copied - creating empty course';
+$string['dayscount'] = '{$a} days';
 ?>
