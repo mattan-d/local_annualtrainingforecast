@@ -51,7 +51,7 @@ $PAGE->set_url(new moodle_url('/local/annualtrainingforecast/manage.php', [
 $PAGE->set_title(get_string('managecourses', 'local_annualtrainingforecast'));
 $PAGE->set_heading(get_string('managecourses', 'local_annualtrainingforecast'));
 $PAGE->set_pagelayout('admin');
-
+ 
 // Add required JavaScript
 $PAGE->requires->js_call_amd('local_annualtrainingforecast/manage', 'init');
 
