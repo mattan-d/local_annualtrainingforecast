@@ -121,7 +121,6 @@ if ($format === 'excel') {
         'margin_footer' => 0,
         'autoScriptToLang' => true,
         'autoLangToFont' => true,
-        'default_font' => 'arial',
         'tempDir' => make_temp_directory('mpdf')
     ]);
 
