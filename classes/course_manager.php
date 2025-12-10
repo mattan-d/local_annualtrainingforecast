@@ -118,7 +118,7 @@ class course_manager {
 
         // Use the category from form data if provided, otherwise use parent's category
         $categoryid = !empty($data->category) ? $data->category : $parentcourse->category;
-        
+
         // Validate the category
         $category = \core_course_category::get($categoryid, MUST_EXIST);
         if (!$category->can_create_course()) {
@@ -138,7 +138,7 @@ class course_manager {
         $coursedata->format = $parentcourse->format;
         $coursedata->timecreated = time();
         $coursedata->timemodified = time();
-        
+
         // Copy additional settings from parent course
         $coursedata->numsections = $parentcourse->numsections ?? 10;
         $coursedata->newsitems = $parentcourse->newsitems ?? 5;
@@ -280,7 +280,7 @@ class course_manager {
             if ($plan->setting_exists('grade_histories')) {
                 $plan->get_setting('grade_histories')->set_value(false);
             }
-            
+
             $questionbankenabled = false;
             foreach (['questionbank', 'questions', 'question_bank'] as $settingname) {
                 try {
@@ -297,7 +297,7 @@ class course_manager {
             if (!$questionbankenabled) {
                 debugging("Warning: No question bank setting found at plan level", DEBUG_DEVELOPER);
             }
-            
+
             if ($plan->setting_exists('groups')) {
                 $plan->get_setting('groups')->set_value(false);
             }
@@ -309,12 +309,12 @@ class course_manager {
                 $settings = $task->get_settings();
                 foreach ($settings as $setting) {
                     $settingname = $setting->get_name();
-                    
+
                     // Enable the activity itself
                     if ($settingname == 'included') {
                         $setting->set_value(true);
                     }
-                    
+
                     // Disable user info
                     if ($settingname == 'userinfo') {
                         $setting->set_value(false);
@@ -338,12 +338,12 @@ class course_manager {
 
             // Now restore to the destination course
             debugging("Restoring backup to course {$tocourseid}", DEBUG_DEVELOPER);
-            
+
             // Extract the backup file to get the backup id
             $fb = get_file_packer('application/vnd.moodle.backup');
             $backupid = restore_controller::get_tempdir_name($tocourseid, $USER->id);
             $path = make_backup_temp_directory($backupid);
-            
+
             debugging("Extracting backup to {$path}", DEBUG_DEVELOPER);
             $file->extract_to_pathname($fb, $path);
 
@@ -363,9 +363,9 @@ class course_manager {
             }
 
             $plan = $rc->get_plan();
-            
+
             if (!$plan) {
-                throw new \moodle_exception('restorefailed', 'local_annualtrainingforecast', 
+                throw new \moodle_exception('restorefailed', 'local_annualtrainingforecast',
                     '', null, 'Failed to get restore plan');
             }
 
@@ -402,7 +402,7 @@ class course_manager {
             if ($plan->setting_exists('grade_histories')) {
                 $plan->get_setting('grade_histories')->set_value(false);
             }
-            
+
             $questionbankenabled = false;
             foreach (['questionbank', 'questions', 'question_bank'] as $settingname) {
                 try {
@@ -419,24 +419,21 @@ class course_manager {
             if (!$questionbankenabled) {
                 debugging("Warning: No question bank setting found at plan level for restore", DEBUG_DEVELOPER);
             }
-            
+
             if ($plan->setting_exists('groups')) {
                 $plan->get_setting('groups')->set_value(false);
-            }
-            if ($plan->setting_exists('competencies')) {
-                $plan->get_setting('competencies')->set_value(false);
             }
 
             foreach ($plan->get_tasks() as $task) {
                 $settings = $task->get_settings();
                 foreach ($settings as $setting) {
                     $settingname = $setting->get_name();
-                    
+
                     // Enable the activity itself
                     if ($settingname == 'included') {
                         $setting->set_value(true);
                     }
-                    
+
                     // Disable user info
                     if ($settingname == 'userinfo') {
                         $setting->set_value(false);
