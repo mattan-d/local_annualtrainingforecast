@@ -280,14 +280,11 @@ class course_manager {
             if ($plan->setting_exists('grade_histories')) {
                 $plan->get_setting('grade_histories')->set_value(false);
             }
+            // Ensure question bank is included
             if ($plan->setting_exists('questionbank')) {
-                $setting = $plan->get_setting('questionbank');
-                $setting->set_value(true);
-                debugging("Root-level question bank backup setting enabled", DEBUG_DEVELOPER);
-            } else {
-                debugging("Question bank setting does not exist at root level", DEBUG_DEVELOPER);
+                $plan->get_setting('questionbank')->set_value(true);
+                debugging("Question bank backup setting enabled", DEBUG_DEVELOPER);
             }
-            
             if ($plan->setting_exists('groups')) {
                 $plan->get_setting('groups')->set_value(false);
             }
@@ -298,17 +295,14 @@ class course_manager {
             foreach ($plan->get_tasks() as $task) {
                 $settings = $task->get_settings();
                 foreach ($settings as $setting) {
-                    $settingname = $setting->get_name();
-                    
-                    // Enable question bank for activities
-                    if ($settingname == 'questionbank') {
-                        $setting->set_value(true);
-                        debugging("Activity-level question bank enabled for task: " . $task->get_name(), DEBUG_DEVELOPER);
-                    }
-                    
-                    // Disable user info for activities
-                    if ($settingname == 'userinfo') {
-                        $setting->set_value(false);
+                    if ($setting->get_name() == 'questionbank' || 
+                        $setting->get_name() == 'userinfo') {
+                        if ($setting->get_name() == 'questionbank') {
+                            $setting->set_value(true);
+                            debugging("Activity-level question bank enabled for task: " . $task->get_name(), DEBUG_DEVELOPER);
+                        } else if ($setting->get_name() == 'userinfo') {
+                            $setting->set_value(false);
+                        }
                     }
                 }
             }
@@ -379,14 +373,11 @@ class course_manager {
             if ($plan->setting_exists('grade_histories')) {
                 $plan->get_setting('grade_histories')->set_value(false);
             }
+            // Ensure question bank is restored
             if ($plan->setting_exists('questionbank')) {
-                $setting = $plan->get_setting('questionbank');
-                $setting->set_value(true);
-                debugging("Root-level question bank restore setting enabled", DEBUG_DEVELOPER);
-            } else {
-                debugging("Question bank setting does not exist at root level for restore", DEBUG_DEVELOPER);
+                $plan->get_setting('questionbank')->set_value(true);
+                debugging("Question bank restore setting enabled", DEBUG_DEVELOPER);
             }
-            
             if ($plan->setting_exists('groups')) {
                 $plan->get_setting('groups')->set_value(false);
             }
@@ -397,17 +388,14 @@ class course_manager {
             foreach ($plan->get_tasks() as $task) {
                 $settings = $task->get_settings();
                 foreach ($settings as $setting) {
-                    $settingname = $setting->get_name();
-                    
-                    // Enable question bank for activities
-                    if ($settingname == 'questionbank') {
-                        $setting->set_value(true);
-                        debugging("Activity-level question bank restore enabled for task: " . $task->get_name(), DEBUG_DEVELOPER);
-                    }
-                    
-                    // Disable user info for activities
-                    if ($settingname == 'userinfo') {
-                        $setting->set_value(false);
+                    if ($setting->get_name() == 'questionbank' || 
+                        $setting->get_name() == 'userinfo') {
+                        if ($setting->get_name() == 'questionbank') {
+                            $setting->set_value(true);
+                            debugging("Activity-level question bank restore enabled for task: " . $task->get_name(), DEBUG_DEVELOPER);
+                        } else if ($setting->get_name() == 'userinfo') {
+                            $setting->set_value(false);
+                        }
                     }
                 }
             }

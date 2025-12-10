@@ -94,22 +94,4 @@ $string['coursedescription'] = 'Course Description';
 $string['existingcoursedetails'] = 'Existing Course Details';
 $string['selectcourse'] = 'Select Course';
 $string['viewcourse'] = 'View Course';
-
-$string['previewiteration'] = 'Preview Iteration';
-$string['iterationdetails'] = 'Iteration Details';
-$string['contenttocopy'] = 'Content to Copy';
-$string['activitieslist'] = 'Activities List';
-$string['confirmcreation'] = 'Confirm Creation';
-$string['backtoedit'] = 'Back to Edit';
-$string['previewcoursedetails'] = 'Course Details Preview';
-$string['questionbankitems'] = 'Question Bank Items';
-$string['sections'] = 'Sections';
-$string['activities'] = 'Activities';
-$string['createinstance'] = 'Create Instance';
-$string['previewcourse'] = 'Preview Course';
-$string['coursedetails'] = 'Course Details';
-$string['createcourse'] = 'Create Course';
-$string['linkingtoexisting'] = 'This will link to an existing course without copying content';
-$string['nocontent'] = 'No content will be copied - creating empty course';
-$string['dayscount'] = '{$a} days';
 ?>
