@@ -280,14 +280,31 @@ class course_manager {
             if ($plan->setting_exists('grade_histories')) {
                 $plan->get_setting('grade_histories')->set_value(false);
             }
+            // Ensure question bank is included
             if ($plan->setting_exists('questionbank')) {
                 $plan->get_setting('questionbank')->set_value(true);
+                debugging("Question bank backup setting enabled", DEBUG_DEVELOPER);
             }
             if ($plan->setting_exists('groups')) {
                 $plan->get_setting('groups')->set_value(false);
             }
             if ($plan->setting_exists('competencies')) {
                 $plan->get_setting('competencies')->set_value(false);
+            }
+
+            foreach ($plan->get_tasks() as $task) {
+                $settings = $task->get_settings();
+                foreach ($settings as $setting) {
+                    if ($setting->get_name() == 'questionbank' || 
+                        $setting->get_name() == 'userinfo') {
+                        if ($setting->get_name() == 'questionbank') {
+                            $setting->set_value(true);
+                            debugging("Activity-level question bank enabled for task: " . $task->get_name(), DEBUG_DEVELOPER);
+                        } else if ($setting->get_name() == 'userinfo') {
+                            $setting->set_value(false);
+                        }
+                    }
+                }
             }
 
             // Execute the backup
@@ -323,7 +340,6 @@ class course_manager {
             // Configure the restore settings
             $plan = $rc->get_plan();
 
-            // Set the plan to include everything except users
             if ($plan->setting_exists('users')) {
                 $plan->get_setting('users')->set_value(false);
             }
@@ -357,14 +373,31 @@ class course_manager {
             if ($plan->setting_exists('grade_histories')) {
                 $plan->get_setting('grade_histories')->set_value(false);
             }
+            // Ensure question bank is restored
             if ($plan->setting_exists('questionbank')) {
                 $plan->get_setting('questionbank')->set_value(true);
+                debugging("Question bank restore setting enabled", DEBUG_DEVELOPER);
             }
             if ($plan->setting_exists('groups')) {
                 $plan->get_setting('groups')->set_value(false);
             }
             if ($plan->setting_exists('competencies')) {
                 $plan->get_setting('competencies')->set_value(false);
+            }
+
+            foreach ($plan->get_tasks() as $task) {
+                $settings = $task->get_settings();
+                foreach ($settings as $setting) {
+                    if ($setting->get_name() == 'questionbank' || 
+                        $setting->get_name() == 'userinfo') {
+                        if ($setting->get_name() == 'questionbank') {
+                            $setting->set_value(true);
+                            debugging("Activity-level question bank restore enabled for task: " . $task->get_name(), DEBUG_DEVELOPER);
+                        } else if ($setting->get_name() == 'userinfo') {
+                            $setting->set_value(false);
+                        }
+                    }
+                }
             }
 
             // Execute precheck
@@ -397,6 +430,7 @@ class course_manager {
             // Rebuild course cache
             rebuild_course_cache($tocourseid);
 
+            debugging("Course content and question bank copied successfully", DEBUG_DEVELOPER);
             return true;
         } catch (\Exception $e) {
             debugging('Backup/restore error: ' . $e->getMessage() . "\n" . $e->getTraceAsString(), DEBUG_DEVELOPER);
