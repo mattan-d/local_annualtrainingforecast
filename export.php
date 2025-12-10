@@ -80,7 +80,7 @@ if ($format === 'excel') {
 
     while ($currentDate <= $endDate) {
         $monthStart = $currentDate->getTimestamp();
-        $monthLabel = $currentDate->format('M Y');
+        $monthLabel = $currentDate->format('m/y');
 
         // Move to next month
         $currentDate->modify('first day of next month');
