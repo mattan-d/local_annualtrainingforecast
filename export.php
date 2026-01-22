@@ -36,6 +36,7 @@ require_capability('local/annualtrainingforecast:viewforecast', $context);
 // Get parameters
 $format = required_param('format', PARAM_ALPHA);
 $viewtype = optional_param('view', 'year', PARAM_ALPHA);
+$year = optional_param('year', date('Y'), PARAM_INT);
 
 // Validate format
 if (!in_array($format, ['pdf', 'excel'])) {
@@ -48,19 +49,26 @@ if (!in_array($viewtype, $validviews)) {
     $viewtype = 'year';
 }
 
+// Validate year
+$currentyear = (int)date('Y');
+if ($year < 2000 || $year > ($currentyear + 10)) {
+    $year = $currentyear;
+}
+
 // Export based on format
 if ($format === 'excel') {
-    \api::export_to_excel($viewtype);
+    \api::export_to_excel($viewtype, $year);
     exit;
 } else if ($format === 'pdf') {
     // For PDF export, we'll render the Gantt chart to a PDF
-    $data = \api::get_gantt_data($viewtype);
+    $data = \api::get_gantt_data($viewtype, $year);
 
     // Set up the page for PDF generation
     $PAGE->set_context($context);
     $PAGE->set_url(new moodle_url('/local/annualtrainingforecast/export.php', [
         'format' => $format,
-        'view' => $viewtype
+        'view' => $viewtype,
+        'year' => $year
     ]));
     $PAGE->set_title(get_string('pluginname', 'local_annualtrainingforecast'));
     $PAGE->set_heading(get_string('pluginname', 'local_annualtrainingforecast'));
