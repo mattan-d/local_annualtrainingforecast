@@ -21,12 +21,14 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+const define = require('define'); // Declare the define variable
+
 define(["jquery", "core/ajax", "core/notification", "core/str", "core/templates"], (
-  $,
-  Ajax,
-  Notification,
-  Str,
-  Templates,
+    $,
+    Ajax,
+    Notification,
+    Str,
+    Templates,
 ) => {
   /**
    * Module initialization
@@ -62,14 +64,14 @@ define(["jquery", "core/ajax", "core/notification", "core/str", "core/templates"
     ])
 
     promises[0]
-      .done((response) => {
-        renderGanttChart(response)
-        $("#gantt-loading").hide()
-      })
-      .fail((error) => {
-        $("#gantt-loading").hide()
-        Notification.exception(error)
-      })
+    .done((response) => {
+      renderGanttChart(response)
+      $("#gantt-loading").hide()
+    })
+    .fail((error) => {
+      $("#gantt-loading").hide()
+      Notification.exception(error)
+    })
   }
 
   /**
@@ -94,19 +96,19 @@ define(["jquery", "core/ajax", "core/notification", "core/str", "core/templates"
 
     // Render template
     Templates.render("local_annualtrainingforecast/gantt_chart", templateData)
-      .done((html) => {
-        container.html(html)
+    .done((html) => {
+      container.html(html)
 
-        // Now render the Gantt chart using the data from the template
-        renderGanttHeader(data.timerange.start, data.timerange.end)
-        renderGanttItems()
+      // Now render the Gantt chart using the data from the template
+      renderGanttHeader(data.timerange.start, data.timerange.end)
+      renderGanttItems()
 
-        // Set up event handlers
-        setupEventHandlers()
-      })
-      .fail((error) => {
-        Notification.exception(error)
-      })
+      // Set up event handlers
+      setupEventHandlers()
+    })
+    .fail((error) => {
+      Notification.exception(error)
+    })
   }
 
   /**
@@ -117,7 +119,7 @@ define(["jquery", "core/ajax", "core/notification", "core/str", "core/templates"
    */
   var renderGanttHeader = (startTimestamp, endTimestamp) => {
     var timerangeEl = $("#gantt-timerange")
-    
+
     // If timestamps not provided, get from data attributes
     if (!startTimestamp) {
       startTimestamp = Number.parseInt(timerangeEl.data("start"))
@@ -125,7 +127,7 @@ define(["jquery", "core/ajax", "core/notification", "core/str", "core/templates"
     if (!endTimestamp) {
       endTimestamp = Number.parseInt(timerangeEl.data("end"))
     }
-    
+
     var totalDays = Number.parseInt(timerangeEl.data("totaldays"))
 
     var startDate = new Date(startTimestamp * 1000)
@@ -150,11 +152,11 @@ define(["jquery", "core/ajax", "core/notification", "core/str", "core/templates"
 
       // Add month
       monthsHtml +=
-        '<div class="gantt-month" style="width: ' +
-        monthWidth +
-        '%;">' +
-        currentDate.toLocaleDateString("default", { month: "long", year: "numeric" }) +
-        "</div>"
+          '<div class="gantt-month" style="width: ' +
+          monthWidth +
+          '%;">' +
+          currentDate.toLocaleDateString("default", { month: "long", year: "numeric" }) +
+          "</div>"
 
       // Add days for this month
       var monthDay = new Date(monthStart)
@@ -261,68 +263,68 @@ define(["jquery", "core/ajax", "core/notification", "core/str", "core/templates"
 
       // Create item HTML
       itemsHtml +=
-        '<div class="gantt-item" data-id="' +
-        id +
-        '">' +
-        '<div class="gantt-item-label" title="' +
-        name +
-        '">' +
-        name +
-        "</div>" +
-        '<div class="gantt-item-bar-container">' +
-        '<div class="gantt-item-bar status-' +
-        statusclass +
-        '" ' +
-        'style="left: ' +
-        left +
-        "%; width: " +
-        width +
-        '%;" ' +
-        'title="' +
-        name +
-        '">' +
-        '<div class="gantt-item-tooltip">' +
-        "<strong>" +
-        name +
-        "</strong><br>" +
-        parentname +
-        "<br>" +
-        itemStart.toLocaleDateString() +
-        " - " +
-        itemEnd.toLocaleDateString() +
-        "<br>" +
-        statusText +
-        '<div class="gantt-item-actions">' +
-        '<select class="update-status" data-id="' +
-        id +
-        '">' +
-        '<option value="0"' +
-        (status === 0 ? " selected" : "") +
-        ">Upcoming</option>" +
-        '<option value="1"' +
-        (status === 1 ? " selected" : "") +
-        ">In Progress</option>' +
-        '<option value="2"' +
-        (status === 2 ? " selected" : "") +
-        ">Completed</option>" +
-        '<option value="3"' +
-        (status === 3 ? " selected" : "") +
-        ">Cancelled</option>' +
-        "</select>" +
-        '<div class="mt-2">' +
-        "<label>" +
-        '<input type="checkbox" class="update-completed" data-id="' +
-        id +
-        '"' +
-        (completed ? " checked" : "") +
-        ">" +
-        "Completed" +
-        "</label>" +
-        "</div>" +
-        "</div>" +
-        "</div>" +
-        "</div>" +
-        "</div>"
+          '<div class="gantt-item" data-id="' +
+          id +
+          '">' +
+          '<div class="gantt-item-label" title="' +
+          name +
+          '">' +
+          name +
+          "</div>" +
+          '<div class="gantt-item-bar-container">' +
+          '<div class="gantt-item-bar status-' +
+          statusclass +
+          '" ' +
+          'style="left: ' +
+          left +
+          "%; width: " +
+          width +
+          '%;" ' +
+          'title="' +
+          name +
+          '">' +
+          '<div class="gantt-item-tooltip">' +
+          "<strong>" +
+          name +
+          "</strong><br>" +
+          parentname +
+          "<br>" +
+          itemStart.toLocaleDateString() +
+          " - " +
+          itemEnd.toLocaleDateString() +
+          "<br>" +
+          statusText +
+          '<div class="gantt-item-actions">' +
+          '<select class="update-status" data-id="' +
+          id +
+          '">' +
+          '<option value="0"' +
+          (status === 0 ? ' selected' : '') +
+          '>Upcoming</option>' +
+          '<option value="1"' +
+          (status === 1 ? ' selected' : '') +
+          '>In Progress</option>' +
+          '<option value="2"' +
+          (status === 2 ? ' selected' : '') +
+          '>Completed</option>' +
+          '<option value="3"' +
+          (status === 3 ? ' selected' : '') +
+          '>Cancelled</option>' +
+          '</select>' +
+          '<div class="mt-2">' +
+          '<label>' +
+          '<input type="checkbox" class="update-completed" data-id="' +
+          id +
+          '"' +
+          (completed ? ' checked' : '') +
+          '>' +
+          'Completed' +
+          '</label>' +
+          '</div>' +
+          '</div>' +
+          '</div>' +
+          '</div>' +
+          '</div>'
     })
 
     // Add items to container
@@ -371,17 +373,17 @@ define(["jquery", "core/ajax", "core/notification", "core/str", "core/templates"
     ])
 
     promises[0]
-      .done((response) => {
-        if (response.success) {
-          // Reload the page to reflect changes
-          window.location.reload()
-        } else {
-          console.error(response.message)
-        }
-      })
-      .fail((error) => {
-        console.error(error)
-      })
+    .done((response) => {
+      if (response.success) {
+        // Reload the page to reflect changes
+        window.location.reload()
+      } else {
+        console.error(response.message)
+      }
+    })
+    .fail((error) => {
+      console.error(error)
+    })
   }
 
   return {
