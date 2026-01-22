@@ -39,7 +39,8 @@ class local_annualtrainingforecast_external extends external_api {
      */
     public static function get_gantt_data_parameters() {
         return new external_function_parameters([
-            'viewtype' => new external_value(PARAM_ALPHA, 'View type (year, halfyear, quarter)', VALUE_DEFAULT, 'year')
+            'viewtype' => new external_value(PARAM_ALPHA, 'View type (year, halfyear, quarter)', VALUE_DEFAULT, 'year'),
+            'year' => new external_value(PARAM_INT, 'Year to display', VALUE_DEFAULT, null)
         ]);
     }
 
@@ -47,14 +48,16 @@ class local_annualtrainingforecast_external extends external_api {
      * Get Gantt data
      *
      * @param string $viewtype View type (year, halfyear, quarter)
+     * @param int $year Year to display (default: current year)
      * @return array
      */
-    public static function get_gantt_data($viewtype = 'year') {
+    public static function get_gantt_data($viewtype = 'year', $year = null) {
         global $USER;
 
         // Parameter validation
         $params = self::validate_parameters(self::get_gantt_data_parameters(), [
-            'viewtype' => $viewtype
+            'viewtype' => $viewtype,
+            'year' => $year
         ]);
 
         // Context validation
@@ -63,7 +66,7 @@ class local_annualtrainingforecast_external extends external_api {
         require_capability('local/annualtrainingforecast:viewforecast', $context);
 
         // Get data
-        $data = \api::get_gantt_data($params['viewtype']);
+        $data = \api::get_gantt_data($params['viewtype'], $params['year']);
 
         return $data;
     }

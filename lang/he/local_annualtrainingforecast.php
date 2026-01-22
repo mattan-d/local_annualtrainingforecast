@@ -94,3 +94,6 @@ $string['coursedescription'] = 'תיאור הקורס';
 $string['existingcoursedetails'] = 'פרטי קורס קיים';
 $string['selectcourse'] = 'בחר קורס';
 $string['viewcourse'] = 'צפה בקורס';
+$string['currentyear'] = 'שנה נוכחית';
+$string['previousyear'] = 'שנה קודמת';
+$string['nextyear'] = 'שנה הבאה';

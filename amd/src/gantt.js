@@ -20,6 +20,7 @@
  * @copyright  2025 Mattan Dor (CentricApp)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+var define = window.define; // Declare the define variable
 define(["jquery", "core/ajax", "core/notification", "core/str", "core/templates"], (
   $,
   Ajax,
@@ -37,15 +38,17 @@ define(["jquery", "core/ajax", "core/notification", "core/str", "core/templates"
     }
 
     var viewType = container.data("view")
-    loadGanttData(viewType)
+    var year = container.data("year")
+    loadGanttData(viewType, year)
   }
 
   /**
    * Load Gantt chart data
    *
    * @param {string} viewType - The view type (year, halfyear, quarter)
+   * @param {int} year - The year to display
    */
-  var loadGanttData = (viewType) => {
+  var loadGanttData = (viewType, year) => {
     $("#gantt-loading").show()
 
     var promises = Ajax.call([
@@ -53,6 +56,7 @@ define(["jquery", "core/ajax", "core/notification", "core/str", "core/templates"
         methodname: "local_annualtrainingforecast_get_gantt_data",
         args: {
           viewtype: viewType,
+          year: year,
         },
       },
     ])
@@ -283,13 +287,13 @@ define(["jquery", "core/ajax", "core/notification", "core/str", "core/templates"
         ">Upcoming</option>" +
         '<option value="1"' +
         (status === 1 ? " selected" : "") +
-        ">In Progress</option>" +
+        ">In Progress</option>' +
         '<option value="2"' +
         (status === 2 ? " selected" : "") +
         ">Completed</option>" +
         '<option value="3"' +
         (status === 3 ? " selected" : "") +
-        ">Cancelled</option>" +
+        ">Cancelled</option>' +
         "</select>" +
         '<div class="mt-2">' +
         "<label>" +
@@ -300,7 +304,6 @@ define(["jquery", "core/ajax", "core/notification", "core/str", "core/templates"
         ">" +
         "Completed" +
         "</label>" +
-        "</div>" +
         "</div>" +
         "</div>" +
         "</div>" +

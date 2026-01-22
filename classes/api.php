@@ -75,20 +75,27 @@ class api {
                 }
                 break;
             case 'quarter':
-                // Start from beginning of current quarter
-                $month = date('n', $now);
-                if ($month <= 3) {
-                    $startdate = strtotime('first day of January this year 00:00:00', $now);
-                    $enddate = strtotime('last day of March this year 23:59:59', $now);
-                } else if ($month <= 6) {
-                    $startdate = strtotime('first day of April this year 00:00:00', $now);
-                    $enddate = strtotime('last day of June this year 23:59:59', $now);
-                } else if ($month <= 9) {
-                    $startdate = strtotime('first day of July this year 00:00:00', $now);
-                    $enddate = strtotime('last day of September this year 23:59:59', $now);
+                // Start from beginning of current quarter (or specified year's quarter)
+                if ($year == (int)date('Y', $now)) {
+                    // For current year, determine current quarter
+                    $month = date('n', $now);
+                    if ($month <= 3) {
+                        $startdate = strtotime("first day of January $year 00:00:00");
+                        $enddate = strtotime("last day of March $year 23:59:59");
+                    } else if ($month <= 6) {
+                        $startdate = strtotime("first day of April $year 00:00:00");
+                        $enddate = strtotime("last day of June $year 23:59:59");
+                    } else if ($month <= 9) {
+                        $startdate = strtotime("first day of July $year 00:00:00");
+                        $enddate = strtotime("last day of September $year 23:59:59");
+                    } else {
+                        $startdate = strtotime("first day of October $year 00:00:00");
+                        $enddate = strtotime("last day of December $year 23:59:59");
+                    }
                 } else {
-                    $startdate = strtotime('first day of October this year 00:00:00', $now);
-                    $enddate = strtotime('last day of December this year 23:59:59', $now);
+                    // For other years, default to first quarter
+                    $startdate = strtotime("first day of January $year 00:00:00");
+                    $enddate = strtotime("last day of March $year 23:59:59");
                 }
                 break;
         }
@@ -231,13 +238,14 @@ class api {
      * Export Gantt data to Excel
      *
      * @param string $viewtype
+     * @param int $year The year to export (default: current year)
      * @return void Sends the file directly to the browser
      */
-    public static function export_to_excel($viewtype) {
+    public static function export_to_excel($viewtype, $year = null) {
         global $CFG;
         require_once($CFG->libdir . '/excellib.class.php');
 
-        $data = self::get_gantt_data($viewtype);
+        $data = self::get_gantt_data($viewtype, $year);
 
         $filename = 'training_forecast_' . $viewtype . '_' . date('Y-m-d') . '.xlsx';
         $workbook = new \MoodleExcelWorkbook($filename);
