@@ -32,7 +32,7 @@ require_capability('local/annualtrainingforecast:viewforecast', $context);
 
 // Set up the page
 $PAGE->set_context($context);
-$PAGE->set_url(new moodle_url('/local/annualtrainingforecast/index.php'));
+$PAGE->set_url(new moodle_url('/local/annualtrainingforecast/index.php', ['view' => $viewtype, 'year' => $year]));
 $PAGE->set_title(get_string('pluginname', 'local_annualtrainingforecast'));
 $PAGE->set_heading(get_string('pluginname', 'local_annualtrainingforecast'));
 $PAGE->set_pagelayout('admin');
@@ -46,6 +46,14 @@ $viewtype = optional_param('view', 'year', PARAM_ALPHA);
 $validviews = ['year', 'halfyear', 'quarter'];
 if (!in_array($viewtype, $validviews)) {
     $viewtype = 'year';
+}
+
+// Get selected year (default to current year)
+$year = optional_param('year', date('Y'), PARAM_INT);
+// Validate year (allow from 2000 to 10 years in the future)
+$currentyear = (int)date('Y');
+if ($year < 2000 || $year > ($currentyear + 10)) {
+    $year = $currentyear;
 }
 
 // Output starts here
@@ -68,6 +76,31 @@ echo $OUTPUT->tabtree($tabs, 'gantt');
 
 // Main container
 echo html_writer::start_div('container-fluid mt-4');
+
+// Year navigation
+echo html_writer::start_div('row mb-3');
+echo html_writer::start_div('col-12 text-center year-navigation');
+$previousyear = $year - 1;
+$nextyear = $year + 1;
+$previousurl = new moodle_url('/local/annualtrainingforecast/index.php', ['view' => $viewtype, 'year' => $previousyear]);
+$nexturl = new moodle_url('/local/annualtrainingforecast/index.php', ['view' => $viewtype, 'year' => $nextyear]);
+$currentyearurl = new moodle_url('/local/annualtrainingforecast/index.php', ['view' => $viewtype, 'year' => $currentyear]);
+
+echo html_writer::start_tag('div', ['class' => 'btn-group', 'role' => 'group', 'style' => 'display: inline-flex; align-items: center;']);
+echo html_writer::link($previousurl, '<i class="fa fa-chevron-left"></i>', ['class' => 'btn btn-outline-secondary', 'title' => get_string('previousyear', 'local_annualtrainingforecast')]);
+echo html_writer::tag('span', $year, ['class' => 'btn btn-primary disabled', 'style' => 'min-width: 100px; font-weight: bold; font-size: 1.1em;']);
+echo html_writer::link($nexturl, '<i class="fa fa-chevron-right"></i>', ['class' => 'btn btn-outline-secondary', 'title' => get_string('nextyear', 'local_annualtrainingforecast')]);
+echo html_writer::end_tag('div');
+
+// Add "Current Year" button if not viewing current year
+if ($year != $currentyear) {
+    echo ' ';
+    echo html_writer::link($currentyearurl, get_string('currentyear', 'local_annualtrainingforecast'), ['class' => 'btn btn-info ml-2']);
+}
+
+echo html_writer::end_div(); // year-navigation
+echo html_writer::end_div(); // row
+
 echo html_writer::start_div('row mb-3');
 
 // View selector
@@ -80,7 +113,7 @@ $viewoptions = [
 ];
 
 foreach ($viewoptions as $key => $label) {
-    $url = new moodle_url('/local/annualtrainingforecast/index.php', ['view' => $key]);
+    $url = new moodle_url('/local/annualtrainingforecast/index.php', ['view' => $key, 'year' => $year]);
     $class = ($viewtype == $key) ? 'btn btn-primary' : 'btn btn-outline-secondary';
     echo html_writer::link($url, $label, ['class' => $class]);
 }
@@ -89,8 +122,8 @@ echo html_writer::end_div(); // view-selector
 
 // Export buttons
 echo html_writer::start_div('col-md-6 export-buttons text-right');
-$exportpdfurl = new moodle_url('/local/annualtrainingforecast/export.php', ['format' => 'pdf', 'view' => $viewtype]);
-$exportexcelurl = new moodle_url('/local/annualtrainingforecast/export.php', ['format' => 'excel', 'view' => $viewtype]);
+$exportpdfurl = new moodle_url('/local/annualtrainingforecast/export.php', ['format' => 'pdf', 'view' => $viewtype, 'year' => $year]);
+$exportexcelurl = new moodle_url('/local/annualtrainingforecast/export.php', ['format' => 'excel', 'view' => $viewtype, 'year' => $year]);
 
 echo html_writer::link($exportpdfurl, '<i class="fa fa-file-pdf-o"></i> ' . get_string('exportpdf', 'local_annualtrainingforecast'), 
     ['class' => 'btn btn-outline-danger']);
@@ -104,7 +137,7 @@ echo html_writer::end_div(); // row
 // Gantt chart container
 echo html_writer::start_div('row');
 echo html_writer::start_div('col-12');
-echo html_writer::start_div('gantt-container', ['id' => 'gantt-chart', 'data-view' => $viewtype]);
+echo html_writer::start_div('gantt-container', ['id' => 'gantt-chart', 'data-view' => $viewtype, 'data-year' => $year]);
 echo html_writer::end_div(); // gantt-container
 echo html_writer::end_div(); // col-12
 echo html_writer::end_div(); // row

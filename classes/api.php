@@ -33,31 +33,45 @@ class api {
      * Get all course iterations for Gantt chart
      *
      * @param string $viewtype year, halfyear, quarter
+     * @param int $year The year to display (default: current year)
      * @return array
      */
-    public static function get_gantt_data($viewtype = 'year') {
+    public static function get_gantt_data($viewtype = 'year', $year = null) {
         global $DB;
 
         // Determine date range based on view type
         $now = time();
+        
+        // If no year specified, use current year
+        if ($year === null) {
+            $year = (int)date('Y', $now);
+        }
+        
         $startdate = $now;
         $enddate = $now;
 
         switch ($viewtype) {
             case 'year':
-                // Start from beginning of current year
-                $startdate = strtotime('first day of January this year 00:00:00', $now);
-                $enddate = strtotime('last day of December this year 23:59:59', $now);
+                // Start from beginning of specified year
+                $startdate = strtotime("first day of January $year 00:00:00");
+                $enddate = strtotime("last day of December $year 23:59:59");
                 break;
             case 'halfyear':
-                // Start from beginning of current half-year
-                $month = date('n', $now);
-                if ($month <= 6) {
-                    $startdate = strtotime('first day of January this year 00:00:00', $now);
-                    $enddate = strtotime('last day of June this year 23:59:59', $now);
+                // Start from beginning of current half-year (or specified year's half-year)
+                if ($year == (int)date('Y', $now)) {
+                    // For current year, determine current half-year
+                    $month = date('n', $now);
+                    if ($month <= 6) {
+                        $startdate = strtotime("first day of January $year 00:00:00");
+                        $enddate = strtotime("last day of June $year 23:59:59");
+                    } else {
+                        $startdate = strtotime("first day of July $year 00:00:00");
+                        $enddate = strtotime("last day of December $year 23:59:59");
+                    }
                 } else {
-                    $startdate = strtotime('first day of July this year 00:00:00', $now);
-                    $enddate = strtotime('last day of December this year 23:59:59', $now);
+                    // For other years, default to first half
+                    $startdate = strtotime("first day of January $year 00:00:00");
+                    $enddate = strtotime("last day of June $year 23:59:59");
                 }
                 break;
             case 'quarter':

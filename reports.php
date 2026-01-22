@@ -30,9 +30,17 @@ require_login();
 $context = context_system::instance();
 require_capability('local/annualtrainingforecast:viewforecast', $context);
 
+// Get selected year (default to current year)
+$year = optional_param('year', date('Y'), PARAM_INT);
+// Validate year (allow from 2000 to 10 years in the future)
+$currentyear = (int)date('Y');
+if ($year < 2000 || $year > ($currentyear + 10)) {
+    $year = $currentyear;
+}
+
 // Set up the page
 $PAGE->set_context($context);
-$PAGE->set_url(new moodle_url('/local/annualtrainingforecast/reports.php'));
+$PAGE->set_url(new moodle_url('/local/annualtrainingforecast/reports.php', ['year' => $year]));
 $PAGE->set_title(get_string('reports', 'local_annualtrainingforecast'));
 $PAGE->set_heading(get_string('reports', 'local_annualtrainingforecast'));
 $PAGE->set_pagelayout('admin');
@@ -52,25 +60,61 @@ $tabs = [
 
 echo $OUTPUT->tabtree($tabs, 'reports');
 
+// Main container
+echo html_writer::start_div('container-fluid mt-4');
+
+// Year navigation
+echo html_writer::start_div('row mb-3');
+echo html_writer::start_div('col-12 text-center year-navigation');
+$previousyear = $year - 1;
+$nextyear = $year + 1;
+$previousurl = new moodle_url('/local/annualtrainingforecast/reports.php', ['year' => $previousyear]);
+$nexturl = new moodle_url('/local/annualtrainingforecast/reports.php', ['year' => $nextyear]);
+$currentyearurl = new moodle_url('/local/annualtrainingforecast/reports.php', ['year' => $currentyear]);
+
+echo html_writer::start_tag('div', ['class' => 'btn-group', 'role' => 'group', 'style' => 'display: inline-flex; align-items: center;']);
+echo html_writer::link($previousurl, '<i class="fa fa-chevron-left"></i>', ['class' => 'btn btn-outline-secondary', 'title' => get_string('previousyear', 'local_annualtrainingforecast')]);
+echo html_writer::tag('span', $year, ['class' => 'btn btn-primary disabled', 'style' => 'min-width: 100px; font-weight: bold; font-size: 1.1em;']);
+echo html_writer::link($nexturl, '<i class="fa fa-chevron-right"></i>', ['class' => 'btn btn-outline-secondary', 'title' => get_string('nextyear', 'local_annualtrainingforecast')]);
+echo html_writer::end_tag('div');
+
+// Add "Current Year" button if not viewing current year
+if ($year != $currentyear) {
+    echo ' ';
+    echo html_writer::link($currentyearurl, get_string('currentyear', 'local_annualtrainingforecast'), ['class' => 'btn btn-info ml-2']);
+}
+
+echo html_writer::end_div(); // year-navigation
+echo html_writer::end_div(); // row
+
 // Get report data
 global $DB;
+
+// Calculate year boundaries for filtering
+$yearstart = mktime(0, 0, 0, 1, 1, $year);
+$yearend = mktime(23, 59, 59, 12, 31, $year);
 
 // Status summary
 $sql = "SELECT status, COUNT(*) as count
         FROM {local_atf_iterations}
+        WHERE startdate >= :yearstart AND startdate <= :yearend
         GROUP BY status
         ORDER BY status";
-$statusSummary = $DB->get_records_sql($sql);
+$statusSummary = $DB->get_records_sql($sql, ['yearstart' => $yearstart, 'yearend' => $yearend]);
 
 // Completion summary
 $sql = "SELECT completed, COUNT(*) as count
         FROM {local_atf_iterations}
+        WHERE startdate >= :yearstart AND startdate <= :yearend
         GROUP BY completed
         ORDER BY completed";
-$completionSummary = $DB->get_records_sql($sql);
+$completionSummary = $DB->get_records_sql($sql, ['yearstart' => $yearstart, 'yearend' => $yearend]);
 
 // Monthly distribution - Cross-database compatible
-$iterations = $DB->get_records('local_atf_iterations', null, '', 'id, startdate');
+$sql = "SELECT id, startdate
+        FROM {local_atf_iterations}
+        WHERE startdate >= :yearstart AND startdate <= :yearend";
+$iterations = $DB->get_records_sql($sql, ['yearstart' => $yearstart, 'yearend' => $yearend]);
 $monthlyData = [];
 
 foreach ($iterations as $iteration) {
@@ -173,5 +217,7 @@ echo html_writer::end_tag('tbody');
 echo html_writer::end_tag('table');
 
 echo html_writer::end_div(); // reports-container
+
+echo html_writer::end_div(); // container-fluid
 
 echo $OUTPUT->footer();
