@@ -20,7 +20,7 @@
  * @copyright  2025 Mattan Dor (CentricApp)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
+const define = window.define // Declare the define variable
 define(["jquery", "core/str", "core/notification"], ($, Str, Notification) => {
   /**
    * Module initialization
