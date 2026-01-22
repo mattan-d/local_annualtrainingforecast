@@ -80,6 +80,10 @@ define(["jquery", "core/ajax", "core/notification", "core/str", "core/templates"
   var renderGanttChart = (data) => {
     var container = $("#gantt-chart")
 
+    console.log("[v0] Gantt data received:", data)
+    console.log("[v0] Start date:", new Date(data.timerange.start * 1000))
+    console.log("[v0] End date:", new Date(data.timerange.end * 1000))
+
     // Prepare template data
     var templateData = {
       startdate: data.timerange.start,
@@ -94,7 +98,7 @@ define(["jquery", "core/ajax", "core/notification", "core/str", "core/templates"
         container.html(html)
 
         // Now render the Gantt chart using the data from the template
-        renderGanttHeader()
+        renderGanttHeader(data.timerange.start, data.timerange.end)
         renderGanttItems()
 
         // Set up event handlers
@@ -107,11 +111,21 @@ define(["jquery", "core/ajax", "core/notification", "core/str", "core/templates"
 
   /**
    * Render the Gantt chart header (months and days)
+   *
+   * @param {int} startTimestamp - The start timestamp (optional, from data attribute if not provided)
+   * @param {int} endTimestamp - The end timestamp (optional, from data attribute if not provided)
    */
-  var renderGanttHeader = () => {
+  var renderGanttHeader = (startTimestamp, endTimestamp) => {
     var timerangeEl = $("#gantt-timerange")
-    var startTimestamp = Number.parseInt(timerangeEl.data("start"))
-    var endTimestamp = Number.parseInt(timerangeEl.data("end"))
+    
+    // If timestamps not provided, get from data attributes
+    if (!startTimestamp) {
+      startTimestamp = Number.parseInt(timerangeEl.data("start"))
+    }
+    if (!endTimestamp) {
+      endTimestamp = Number.parseInt(timerangeEl.data("end"))
+    }
+    
     var totalDays = Number.parseInt(timerangeEl.data("totaldays"))
 
     var startDate = new Date(startTimestamp * 1000)
