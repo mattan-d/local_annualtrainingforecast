@@ -97,4 +97,16 @@ $string['viewcourse'] = 'View Course';
 $string['previousyear'] = 'Previous Year';
 $string['nextyear'] = 'Next Year';
 $string['currentyear'] = 'Current Year';
+$string['moreactivities'] = '+{$a} more';
+$string['calendarlegend'] = 'Status colours';
+$string['generalevent'] = 'General event';
+$string['addgeneralevent'] = 'Add general event';
+$string['eventtitle'] = 'Event title';
+$string['eventtitlerequired'] = 'Please enter an event title.';
+$string['eventdescription'] = 'Description';
+$string['eventstartdate'] = 'Start date';
+$string['eventenddate'] = 'End date';
+$string['deletegeneralevent'] = 'Delete event';
+$string['confirmeventdelete'] = 'Delete this event? This cannot be undone.';
+$string['dayclickhint'] = 'Tip: click a day to add a general event (managers).';
 ?>

@@ -92,7 +92,9 @@ class local_annualtrainingforecast_external extends external_api {
                     'end' => new external_value(PARAM_INT, 'End timestamp'),
                     'status' => new external_value(PARAM_INT, 'Status'),
                     'completed' => new external_value(PARAM_INT, 'Completion status'),
-                    'statusclass' => new external_value(PARAM_TEXT, 'Status CSS class')
+                    'statusclass' => new external_value(PARAM_TEXT, 'Status CSS class'),
+                    'isgeneralevent' => new external_value(PARAM_BOOL, 'General calendar event', VALUE_DEFAULT, false),
+                    'description' => new external_value(PARAM_RAW, 'Description (general events)', VALUE_DEFAULT, ''),
                 ])
             )
         ]);
@@ -145,6 +147,153 @@ class local_annualtrainingforecast_external extends external_api {
             'success' => $result,
             'message' => $result ? '' : get_string('updatefailed', 'local_annualtrainingforecast')
         ];
+    }
+
+    /**
+     * Create general calendar event parameters
+     *
+     * @return external_function_parameters
+     */
+    public static function create_generalevent_parameters() {
+        return new external_function_parameters([
+            'name' => new external_value(PARAM_TEXT, 'Event title'),
+            'description' => new external_value(PARAM_RAW, 'Description', VALUE_DEFAULT, ''),
+            'start' => new external_value(PARAM_INT, 'Start timestamp'),
+            'end' => new external_value(PARAM_INT, 'End timestamp'),
+        ]);
+    }
+
+    /**
+     * Create general calendar event
+     *
+     * @param string $name
+     * @param string $description
+     * @param int $start
+     * @param int $end
+     * @return array
+     */
+    public static function create_generalevent($name, $description, $start, $end) {
+        $params = self::validate_parameters(self::create_generalevent_parameters(), [
+            'name' => $name,
+            'description' => $description,
+            'start' => $start,
+            'end' => $end,
+        ]);
+
+        $context = context_system::instance();
+        self::validate_context($context);
+
+        return \api::create_generalevent(
+            $params['name'],
+            $params['description'],
+            $params['start'],
+            $params['end']
+        );
+    }
+
+    /**
+     * @return external_description
+     */
+    public static function create_generalevent_returns() {
+        return new external_single_structure([
+            'success' => new external_value(PARAM_BOOL, 'Success'),
+            'message' => new external_value(PARAM_TEXT, 'Error message'),
+            'id' => new external_value(PARAM_INT, 'New record id'),
+        ]);
+    }
+
+    /**
+     * Update general calendar event parameters
+     *
+     * @return external_function_parameters
+     */
+    public static function update_generalevent_parameters() {
+        return new external_function_parameters([
+            'id' => new external_value(PARAM_INT, 'Event id'),
+            'name' => new external_value(PARAM_TEXT, 'Event title'),
+            'description' => new external_value(PARAM_RAW, 'Description', VALUE_DEFAULT, ''),
+            'start' => new external_value(PARAM_INT, 'Start timestamp'),
+            'end' => new external_value(PARAM_INT, 'End timestamp'),
+        ]);
+    }
+
+    /**
+     * Update general calendar event
+     *
+     * @param int $id
+     * @param string $name
+     * @param string $description
+     * @param int $start
+     * @param int $end
+     * @return array
+     */
+    public static function update_generalevent($id, $name, $description, $start, $end) {
+        $params = self::validate_parameters(self::update_generalevent_parameters(), [
+            'id' => $id,
+            'name' => $name,
+            'description' => $description,
+            'start' => $start,
+            'end' => $end,
+        ]);
+
+        $context = context_system::instance();
+        self::validate_context($context);
+
+        return \api::update_generalevent(
+            $params['id'],
+            $params['name'],
+            $params['description'],
+            $params['start'],
+            $params['end']
+        );
+    }
+
+    /**
+     * @return external_description
+     */
+    public static function update_generalevent_returns() {
+        return new external_single_structure([
+            'success' => new external_value(PARAM_BOOL, 'Success'),
+            'message' => new external_value(PARAM_TEXT, 'Error message'),
+        ]);
+    }
+
+    /**
+     * Delete general calendar event parameters
+     *
+     * @return external_function_parameters
+     */
+    public static function delete_generalevent_parameters() {
+        return new external_function_parameters([
+            'id' => new external_value(PARAM_INT, 'Event id'),
+        ]);
+    }
+
+    /**
+     * Delete general calendar event
+     *
+     * @param int $id
+     * @return array
+     */
+    public static function delete_generalevent($id) {
+        $params = self::validate_parameters(self::delete_generalevent_parameters(), [
+            'id' => $id,
+        ]);
+
+        $context = context_system::instance();
+        self::validate_context($context);
+
+        return \api::delete_generalevent($params['id']);
+    }
+
+    /**
+     * @return external_description
+     */
+    public static function delete_generalevent_returns() {
+        return new external_single_structure([
+            'success' => new external_value(PARAM_BOOL, 'Success'),
+            'message' => new external_value(PARAM_TEXT, 'Error message'),
+        ]);
     }
 
     /**

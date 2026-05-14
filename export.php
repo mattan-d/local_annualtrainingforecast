@@ -211,17 +211,26 @@ if ($format === 'excel') {
     $html .= '<th>' . get_string('completed', 'local_annualtrainingforecast') . '</th>';
     $html .= '</tr>';
 
+    $generallabel = get_string('generalevent', 'local_annualtrainingforecast');
+
     foreach ($data['items'] as $item) {
-        $completedtext = $item['completed'] ?
+        $isgeneral = !empty($item['isgeneralevent']);
+
+        $completedtext = $isgeneral ? '—' : (
+            $item['completed'] ?
             get_string('completed', 'local_annualtrainingforecast') :
-            get_string('notcompleted', 'local_annualtrainingforecast');
+            get_string('notcompleted', 'local_annualtrainingforecast')
+        );
+
+        $statustext = $isgeneral ? $generallabel : $statusStrings[$item['status']];
+        $parentcell = $isgeneral ? $generallabel : htmlspecialchars($item['parentname']);
 
         $html .= '<tr>';
         $html .= '<td>' . htmlspecialchars($item['name']) . '</td>';
-        $html .= '<td>' . htmlspecialchars($item['parentname']) . '</td>';
+        $html .= '<td>' . $parentcell . '</td>';
         $html .= '<td>' . userdate($item['start'], get_string('strftimedatefullshort', 'core_langconfig')) . '</td>';
         $html .= '<td>' . userdate($item['end'], get_string('strftimedatefullshort', 'core_langconfig')) . '</td>';
-        $html .= '<td>' . $statusStrings[$item['status']] . '</td>';
+        $html .= '<td>' . $statustext . '</td>';
         $html .= '<td>' . $completedtext . '</td>';
         $html .= '</tr>';
     }
@@ -257,12 +266,15 @@ if ($format === 'excel') {
 
     // One row per course
     foreach ($data['items'] as $item) {
+        $isgeneral = !empty($item['isgeneralevent']);
+        $rowcolor = $isgeneral ? '#dadce0' : $statusColors[$item['status']];
+
         $html .= '<tr>';
 
         // Course name cell
         $html .= '<td style="width: 180px;">';
         $html .= '<strong>' . htmlspecialchars($item['name']) . '</strong><br>';
-        $html .= '<small>' . htmlspecialchars($item['parentname']) . '</small>';
+        $html .= '<small>' . htmlspecialchars($isgeneral ? $generallabel : $item['parentname']) . '</small>';
         $html .= '</td>';
 
         // Calculate which cells should be colored
@@ -281,7 +293,7 @@ if ($format === 'excel') {
             $isInRange = ($itemStart <= $monthEnd && $itemEnd >= $monthStart);
 
             if ($isInRange) {
-                $html .= '<td style="background-color: ' . $statusColors[$item['status']] . ';">';
+                $html .= '<td style="background-color: ' . $rowcolor . ';">';
 
                 // Only show dates if there's enough space
                 if ($columnCount <= 12) {

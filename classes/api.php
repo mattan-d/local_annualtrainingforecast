@@ -205,7 +205,39 @@ class api {
                     'end' => $itemEndDate,
                     'status' => $iteration->status,
                     'completed' => $iteration->completed,
-                    'statusclass' => $statusclasses[$iteration->status]
+                    'statusclass' => $statusclasses[$iteration->status],
+                    'isgeneralevent' => 0,
+                    'description' => '',
+                ];
+            }
+        }
+
+        // General calendar events (same shape as items for the forecast view).
+        $dbman = $DB->get_manager();
+        $gentable = new \xmldb_table('local_atf_generalevents');
+        if ($dbman->table_exists($gentable)) {
+            $generals = $DB->get_records_select(
+                'local_atf_generalevents',
+                'startdate <= :vr_end AND enddate >= :vr_start',
+                [
+                    'vr_start' => $startdate,
+                    'vr_end' => $enddate,
+                ],
+                'startdate ASC'
+            );
+            foreach ($generals as $ge) {
+                $result['items'][] = [
+                    'id' => (int) $ge->id,
+                    'parentid' => 0,
+                    'name' => $ge->name,
+                    'parentname' => '',
+                    'start' => (int) $ge->startdate,
+                    'end' => (int) $ge->enddate,
+                    'status' => 0,
+                    'completed' => 0,
+                    'statusclass' => 'general',
+                    'isgeneralevent' => 1,
+                    'description' => isset($ge->description) ? (string) $ge->description : '',
                 ];
             }
         }
@@ -232,6 +264,117 @@ class api {
         $iteration->modifiedby = $USER->id;
 
         return $DB->update_record('local_atf_iterations', $iteration);
+    }
+
+    /**
+     * Create a general calendar event on the forecast view.
+     *
+     * @param string $name
+     * @param string $description
+     * @param int $start Unix timestamp (start of first day)
+     * @param int $end Unix timestamp (end of last day)
+     * @return array success, message, id
+     */
+    public static function create_generalevent($name, $description, $start, $end) {
+        global $DB, $USER;
+
+        $context = \context_system::instance();
+        require_capability('local/annualtrainingforecast:managecourses', $context);
+
+        $name = trim($name);
+        if ($name === '') {
+            return [
+                'success' => false,
+                'message' => get_string('eventtitlerequired', 'local_annualtrainingforecast'),
+                'id' => 0,
+            ];
+        }
+        if ($start > $end) {
+            return [
+                'success' => false,
+                'message' => get_string('enddatebeforestartdate', 'local_annualtrainingforecast'),
+                'id' => 0,
+            ];
+        }
+
+        $now = time();
+        $rec = (object) [
+            'name' => $name,
+            'description' => $description !== null ? $description : '',
+            'startdate' => $start,
+            'enddate' => $end,
+            'timecreated' => $now,
+            'timemodified' => $now,
+            'createdby' => $USER->id,
+            'modifiedby' => $USER->id,
+        ];
+        $id = $DB->insert_record('local_atf_generalevents', $rec);
+
+        return [
+            'success' => true,
+            'message' => '',
+            'id' => (int) $id,
+        ];
+    }
+
+    /**
+     * Update a general calendar event.
+     *
+     * @param int $id
+     * @param string $name
+     * @param string $description
+     * @param int $start
+     * @param int $end
+     * @return array success, message
+     */
+    public static function update_generalevent($id, $name, $description, $start, $end) {
+        global $DB, $USER;
+
+        $context = \context_system::instance();
+        require_capability('local/annualtrainingforecast:managecourses', $context);
+
+        $name = trim($name);
+        if ($name === '') {
+            return [
+                'success' => false,
+                'message' => get_string('eventtitlerequired', 'local_annualtrainingforecast'),
+            ];
+        }
+        if ($start > $end) {
+            return [
+                'success' => false,
+                'message' => get_string('enddatebeforestartdate', 'local_annualtrainingforecast'),
+            ];
+        }
+
+        $ge = $DB->get_record('local_atf_generalevents', ['id' => $id], '*', MUST_EXIST);
+        $ge->name = $name;
+        $ge->description = $description !== null ? $description : '';
+        $ge->startdate = $start;
+        $ge->enddate = $end;
+        $ge->timemodified = time();
+        $ge->modifiedby = $USER->id;
+
+        $DB->update_record('local_atf_generalevents', $ge);
+
+        return ['success' => true, 'message' => ''];
+    }
+
+    /**
+     * Delete a general calendar event.
+     *
+     * @param int $id
+     * @return array success, message
+     */
+    public static function delete_generalevent($id) {
+        global $DB;
+
+        $context = \context_system::instance();
+        require_capability('local/annualtrainingforecast:managecourses', $context);
+
+        $DB->delete_records('local_atf_generalevents', ['id' => $id]);
+
+        return ['success' => true, 'message' => ''];
     }
 
     /**
@@ -281,12 +424,19 @@ class api {
                 get_string('completed', 'local_annualtrainingforecast') :
                 get_string('notcompleted', 'local_annualtrainingforecast');
 
+            $statustext = !empty($item['isgeneralevent']) ?
+                get_string('generalevent', 'local_annualtrainingforecast') :
+                $statusstrings[$item['status']];
+
+            $completedcol = !empty($item['isgeneralevent']) ? '—' : $completedtext;
+
             $worksheet->write($row, 0, $item['name']);
-            $worksheet->write($row, 1, $item['parentname']);
+            $worksheet->write($row, 1, !empty($item['isgeneralevent']) ?
+                get_string('generalevent', 'local_annualtrainingforecast') : $item['parentname']);
             $worksheet->write($row, 2, userdate($item['start'], get_string('strftimedatefullshort', 'core_langconfig')));
             $worksheet->write($row, 3, userdate($item['end'], get_string('strftimedatefullshort', 'core_langconfig')));
-            $worksheet->write($row, 4, $statusstrings[$item['status']]);
-            $worksheet->write($row, 5, $completedtext);
+            $worksheet->write($row, 4, $statustext);
+            $worksheet->write($row, 5, $completedcol);
 
             $row++;
         }

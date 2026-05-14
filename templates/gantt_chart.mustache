@@ -14,7 +14,7 @@
 {{!
     @template local_annualtrainingforecast/gantt_chart
 
-    Gantt chart template.
+    Year calendar shell; rendering is completed by AMD (gantt.js).
 
     Example context (json):
     {
@@ -38,282 +38,29 @@
 }}
 
 <div class="gantt-container-wrapper">
-    <div id="gantt-data" style="display: none;">
+    <div id="gantt-data" class="sr-only" aria-hidden="true">
         {{#items}}
-        <div class="gantt-item-data" 
-             data-id="{{id}}" 
-             data-parentid="{{parentid}}" 
-             data-name="{{name}}" 
-             data-parentname="{{parentname}}" 
-             data-start="{{start}}" 
-             data-end="{{end}}" 
-             data-status="{{status}}" 
-             data-completed="{{completed}}" 
-             data-statusclass="{{statusclass}}">
+        <div class="gantt-item-data"
+             data-id="{{id}}"
+             data-parentid="{{parentid}}"
+             data-name="{{name}}"
+             data-parentname="{{parentname}}"
+             data-start="{{start}}"
+             data-end="{{end}}"
+             data-status="{{status}}"
+             data-completed="{{completed}}"
+             data-statusclass="{{statusclass}}"
+             data-isgeneralevent="{{#isgeneralevent}}1{{/isgeneralevent}}{{^isgeneralevent}}0{{/isgeneralevent}}">
+            <span class="atf-item-desc-payload sr-only">{{description}}</span>
         </div>
         {{/items}}
     </div>
 
-    <div id="gantt-timerange" style="display: none;" 
-         data-start="{{startdate}}" 
-         data-end="{{enddate}}" 
+    <div id="gantt-timerange" class="sr-only" aria-hidden="true"
+         data-start="{{startdate}}"
+         data-end="{{enddate}}"
          data-totaldays="{{totaldays}}">
     </div>
 
-    <div class="table-responsive gantt-table-container">
-        <table class="table gantt-table">
-            <thead>
-                <tr class="gantt-months-row">
-                    <th class="gantt-course-column">Course</th>
-                    <!-- Month headers will be added here by JavaScript -->
-                </tr>
-                <tr class="gantt-days-row">
-                    <th class="gantt-course-column"></th>
-                    <!-- Day headers will be added here by JavaScript -->
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Course rows will be added here by JavaScript -->
-            </tbody>
-        </table>
-    </div>
+    <div class="atf-year-calendar-root" id="atf-year-calendar-root"></div>
 </div>
-
-<script>
-require(['jquery'], function($) {
-    $(document).ready(function() {
-        // Get data from data attributes
-        var container = $('#gantt-timerange');
-        var startTimestamp = parseInt(container.data('start'));
-        var endTimestamp = parseInt(container.data('end'));
-        
-        // Create date objects
-        var startDate = new Date(startTimestamp * 1000);
-        var endDate = new Date(endTimestamp * 1000);
-        
-        // Generate all days between start and end
-        var allDays = [];
-        var currentDate = new Date(startDate);
-        
-        while (currentDate <= endDate) {
-            allDays.push(new Date(currentDate));
-            currentDate.setDate(currentDate.getDate() + 1);
-        }
-        
-        // Generate month headers
-        var monthsRow = $('.gantt-months-row');
-        var daysRow = $('.gantt-days-row');
-        var currentMonth = -1;
-        var monthColspan = 0;
-        var monthStartIndex = 0;
-        
-        for (var i = 0; i < allDays.length; i++) {
-            var day = allDays[i];
-            
-            // Add day cell
-            var isWeekend = day.getDay() === 0 || day.getDay() === 6;
-            var isToday = new Date().toDateString() === day.toDateString();
-            
-            var dayClass = 'gantt-day';
-            if (isWeekend) dayClass += ' weekend';
-            if (isToday) dayClass += ' today';
-            
-            daysRow.append('<th class="' + dayClass + '" data-date="' + day.toISOString() + '">' + 
-                day.getDate() + '</th>');
-            
-            // Check if we're in a new month
-            if (day.getMonth() !== currentMonth) {
-                // Close previous month if not the first
-                if (currentMonth !== -1) {
-                    monthsRow.append('<th colspan="' + monthColspan + '" class="gantt-month">' + 
-                        allDays[monthStartIndex].toLocaleDateString('default', { month: 'long', year: 'numeric' }) + '</th>');
-                }
-                
-                // Start new month
-                currentMonth = day.getMonth();
-                monthStartIndex = i;
-                monthColspan = 1;
-            } else {
-                monthColspan++;
-            }
-        }
-        
-        // Add the last month
-        monthsRow.append('<th colspan="' + monthColspan + '" class="gantt-month">' + 
-            allDays[monthStartIndex].toLocaleDateString('default', { month: 'long', year: 'numeric' }) + '</th>');
-        
-        // Process items
-        var tbody = $('.gantt-table tbody');
-        
-        $('.gantt-item-data').each(function() {
-            var item = $(this);
-            var id = item.data('id');
-            var name = item.data('name');
-            var parentname = item.data('parentname');
-            var itemStartTimestamp = parseInt(item.data('start'));
-            var itemEndTimestamp = parseInt(item.data('end'));
-            var status = parseInt(item.data('status'));
-            var completed = parseInt(item.data('completed'));
-            var statusclass = item.data('statusclass');
-            
-            var itemStart = new Date(itemStartTimestamp * 1000);
-            var itemEnd = new Date(itemEndTimestamp * 1000);
-            
-            // Create row for this item
-            var row = $('<tr class="gantt-item-row"></tr>');
-            
-            // Add course name cell
-            var statusBadge = '';
-            var statusTexts = ['Upcoming', 'In Progress', 'Completed', 'Cancelled'];
-            var badgeClasses = ['info', 'warning', 'success', 'danger'];
-            
-            statusBadge = '<span class="badge badge-' + badgeClasses[status] + '">' + statusTexts[status] + '</span>';
-            
-            var courseCell = $('<td class="gantt-course-cell"></td>');
-            courseCell.append('<div class="gantt-course-name">' + name + '</div>');
-            courseCell.append('<div class="gantt-course-parent">' + parentname + '</div>');
-            courseCell.append('<div class="gantt-course-status">' + statusBadge + '</div>');
-            
-            row.append(courseCell);
-            
-            // Add cells for each day
-            for (var i = 0; i < allDays.length; i++) {
-                var day = allDays[i];
-                var cell = $('<td class="gantt-day-cell"></td>');
-                
-                // Check if this day is within the item's date range
-                var isInRange = (day >= itemStart && day <= itemEnd);
-                
-                if (isInRange) {
-                    cell.addClass('gantt-day-active status-' + statusclass);
-                    
-                    // Add special classes for first and last day
-                    if (day.toDateString() === itemStart.toDateString()) {
-                        cell.addClass('gantt-day-start');
-                    }
-                    
-                    if (day.toDateString() === itemEnd.toDateString()) {
-                        cell.addClass('gantt-day-end');
-                    }
-                    
-                    // Add tooltip data
-                    cell.attr('data-toggle', 'tooltip');
-                    cell.attr('data-html', 'true');
-                    cell.attr('title', '<strong>' + name + '</strong><br>' + 
-                        parentname + '<br>' + 
-                        itemStart.toLocaleDateString() + ' - ' + itemEnd.toLocaleDateString());
-                }
-                
-                row.append(cell);
-            }
-            
-            // Add row to table
-            tbody.append(row);
-        });
-        
-        // Initialize tooltips
-        if ($.fn.tooltip) {
-            $('[data-toggle="tooltip"]').tooltip();
-        }
-        
-        // Add click handler for cells to show modal with details
-        $('.gantt-day-active').on('click', function() {
-            var cell = $(this);
-            var rowIndex = cell.parent().index();
-            var item = $('.gantt-item-data').eq(rowIndex);
-            
-            if (item.length) {
-                var id = item.data('id');
-                var name = item.data('name');
-                var parentname = item.data('parentname');
-                var status = parseInt(item.data('status'));
-                var completed = parseInt(item.data('completed'));
-                
-                // Show modal with course details and status update options
-                showCourseModal(id, name, parentname, status, completed);
-            }
-        });
-    });
-    
-    // Function to show course details modal
-    function showCourseModal(id, name, parentname, status, completed) {
-        // Create modal HTML
-        var modalHtml = 
-            '<div class="modal fade" id="courseModal" tabindex="-1" role="dialog" aria-labelledby="courseModalLabel" aria-hidden="true">' +
-                '<div class="modal-dialog" role="document">' +
-                    '<div class="modal-content">' +
-                        '<div class="modal-header">' +
-                            '<h5 class="modal-title" id="courseModalLabel">' + name + '</h5>' +
-                            '<button type="button" class="close" data-dismiss="modal" aria-label="Close">' +
-                                '<span aria-hidden="true">&times;</span>' +
-                            '</button>' +
-                        '</div>' +
-                        '<div class="modal-body">' +
-                            '<p><strong>Parent Course:</strong> ' + parentname + '</p>' +
-                            '<div class="form-group">' +
-                                '<label for="courseStatus">Status:</label>' +
-                                '<select class="form-control" id="courseStatus">' +
-                                    '<option value="0"' + (status === 0 ? ' selected' : '') + '>Upcoming</option>' +
-                                    '<option value="1"' + (status === 1 ? ' selected' : '') + '>In Progress</option>' +
-                                    '<option value="2"' + (status === 2 ? ' selected' : '') + '>Completed</option>' +
-                                    '<option value="3"' + (status === 3 ? ' selected' : '') + '>Cancelled</option>' +
-                                '</select>' +
-                            '</div>' +
-                            '<div class="form-group form-check">' +
-                                '<input type="checkbox" class="form-check-input" id="courseCompleted"' + (completed ? ' checked' : '') + '>' +
-                                '<label class="form-check-label" for="courseCompleted">Completed</label>' +
-                            '</div>' +
-                        '</div>' +
-                        '<div class="modal-footer">' +
-                            '<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>' +
-                            '<button type="button" class="btn btn-primary" id="saveChanges">Save changes</button>' +
-                        '</div>' +
-                    '</div>' +
-                '</div>' +
-            '</div>';
-        
-        // Remove any existing modal
-        $('#courseModal').remove();
-        
-        // Add modal to page
-        $('body').append(modalHtml);
-        
-        // Show modal
-        $('#courseModal').modal('show');
-        
-        // Handle save button
-        $('#saveChanges').on('click', function() {
-            var newStatus = $('#courseStatus').val();
-            var newCompleted = $('#courseCompleted').is(':checked') ? 1 : 0;
-            
-            // Call AJAX function to update status
-            require(['core/ajax'], function(ajax) {
-                var promises = ajax.call([{
-                    methodname: 'local_annualtrainingforecast_update_iteration_status',
-                    args: {
-                        id: id,
-                        status: newStatus,
-                        completed: newCompleted
-                    }
-                }]);
-                
-                promises[0].done(function(response) {
-                    if (response.success) {
-                        // Close modal
-                        $('#courseModal').modal('hide');
-                        
-                        // Reload the page to reflect changes
-                        window.location.reload();
-                    } else {
-                        console.error(response.message);
-                        alert('Failed to update status: ' + response.message);
-                    }
-                }).fail(function(error) {
-                    console.error(error);
-                    alert('Failed to update status. Please try again.');
-                });
-            });
-        });
-    }
-});
-</script>

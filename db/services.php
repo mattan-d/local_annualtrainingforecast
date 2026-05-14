@@ -42,14 +42,44 @@ $functions = [
         'type'          => 'write',
         'ajax'          => true,
         'capabilities'  => 'local/annualtrainingforecast:updatestatus'
-    ]
+    ],
+    'local_annualtrainingforecast_create_generalevent' => [
+        'classname'     => 'local_annualtrainingforecast_external',
+        'methodname'    => 'create_generalevent',
+        'classpath'     => 'local/annualtrainingforecast/externallib.php',
+        'description'   => 'Create general calendar event',
+        'type'          => 'write',
+        'ajax'          => true,
+        'capabilities'  => 'local/annualtrainingforecast:managecourses'
+    ],
+    'local_annualtrainingforecast_update_generalevent' => [
+        'classname'     => 'local_annualtrainingforecast_external',
+        'methodname'    => 'update_generalevent',
+        'classpath'     => 'local/annualtrainingforecast/externallib.php',
+        'description'   => 'Update general calendar event',
+        'type'          => 'write',
+        'ajax'          => true,
+        'capabilities'  => 'local/annualtrainingforecast:managecourses'
+    ],
+    'local_annualtrainingforecast_delete_generalevent' => [
+        'classname'     => 'local_annualtrainingforecast_external',
+        'methodname'    => 'delete_generalevent',
+        'classpath'     => 'local/annualtrainingforecast/externallib.php',
+        'description'   => 'Delete general calendar event',
+        'type'          => 'write',
+        'ajax'          => true,
+        'capabilities'  => 'local/annualtrainingforecast:managecourses'
+    ],
 ];
 
 $services = [
     'Annual Training Forecast' => [
         'functions' => [
             'local_annualtrainingforecast_get_gantt_data',
-            'local_annualtrainingforecast_update_iteration_status'
+            'local_annualtrainingforecast_update_iteration_status',
+            'local_annualtrainingforecast_create_generalevent',
+            'local_annualtrainingforecast_update_generalevent',
+            'local_annualtrainingforecast_delete_generalevent',
         ],
         'restrictedusers' => 0,
         'enabled' => 1,
