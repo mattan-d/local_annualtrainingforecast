@@ -25,6 +25,7 @@
 require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
 require_once($CFG->dirroot . '/local/annualtrainingforecast/classes/api.php');
+require_once($CFG->dirroot . '/local/annualtrainingforecast/classes/pdf_calendar_builder.php');
 
 require_once(__DIR__ . '/external/autoload.php');
 
@@ -60,7 +61,7 @@ if ($format === 'excel') {
     \api::export_to_excel($viewtype, $year);
     exit;
 } else if ($format === 'pdf') {
-    // For PDF export, we'll render the Gantt chart to a PDF
+    // PDF: summary table + year-calendar style grid (matches on-screen forecast calendar).
     $data = \api::get_gantt_data($viewtype, $year);
 
     // Set up the page for PDF generation
@@ -73,43 +74,6 @@ if ($format === 'excel') {
     $PAGE->set_title(get_string('pluginname', 'local_annualtrainingforecast'));
     $PAGE->set_heading(get_string('pluginname', 'local_annualtrainingforecast'));
     $PAGE->set_pagelayout('print');
-
-    // Calculate time range
-    $startTimestamp = $data['timerange']['start'];
-    $endTimestamp = $data['timerange']['end'];
-    $totalDuration = $endTimestamp - $startTimestamp;
-
-    // Generate month divisions
-    $months = [];
-    $currentDate = new \DateTime('@' . $startTimestamp);
-    $endDate = new \DateTime('@' . $endTimestamp);
-    $currentDate->setTime(0, 0, 0);
-    $endDate->setTime(23, 59, 59);
-
-    while ($currentDate <= $endDate) {
-        $monthStart = $currentDate->getTimestamp();
-        $monthLabel = $currentDate->format('m/y');
-
-        // Move to next month
-        $currentDate->modify('first day of next month');
-
-        // Calculate width percentage
-        $monthDuration = min($currentDate->getTimestamp(), $endTimestamp) - $monthStart;
-        $widthPercentage = ($monthDuration / $totalDuration) * 100;
-
-        $months[] = [
-            'label' => $monthLabel,
-            'width' => $widthPercentage
-        ];
-    }
-
-    // Status colors
-    $statusColors = [
-        0 => '#cce5ff', // upcoming - light blue
-        1 => '#fff3cd', // in progress - light yellow
-        2 => '#d4edda', // completed - light green
-        3 => '#f8d7da'  // cancelled - light red
-    ];
 
     $statusStrings = [
         0 => get_string('status_upcoming', 'local_annualtrainingforecast'),
@@ -133,50 +97,139 @@ if ($format === 'excel') {
     ]);
 
     // Build HTML content directly
+    $isrtl = (current_language() === 'he' || current_language() === 'ar');
+    $htmldir = $isrtl ? 'rtl' : 'ltr';
     $html = '
     <style>
-        body { 
-            direction: ' . (current_language() == 'he' || current_language() == 'ar' ? 'rtl' : 'ltr') . ';
+        body {
+            direction: ' . $htmldir . ';
             font-size: 10pt;
             line-height: 1.2;
         }
-        table { 
-            border-collapse: collapse; 
-            width: 100%; 
+        table.atf-pdf-data-table {
+            border-collapse: collapse;
+            width: 100%;
             margin-bottom: 10px;
         }
-        th, td { 
-            border: 1px solid #ddd; 
-            padding: 5px; 
-            text-align: right; 
+        table.atf-pdf-data-table th,
+        table.atf-pdf-data-table td {
+            border: 1px solid #ddd;
+            padding: 5px;
+            text-align: ' . ($isrtl ? 'right' : 'left') . ';
             font-size: 9pt;
         }
-        th { 
-            background-color: #f2f2f2; 
+        table.atf-pdf-data-table th {
+            background-color: #f2f2f2;
             font-weight: bold;
         }
-        .center { 
-            text-align: center; 
+        .center {
+            text-align: center;
         }
-        .title { 
-            font-size: 14pt; 
-            font-weight: bold; 
+        .title {
+            font-size: 14pt;
+            font-weight: bold;
             margin-bottom: 5px;
         }
-        .subtitle { 
-            font-size: 12pt; 
+        .subtitle {
+            font-size: 12pt;
             margin-bottom: 5px;
         }
-        .compact-table td, .compact-table th {
-            padding: 3px;
+        .atf-pdf-calendar-block {
+            direction: ltr;
+            unicode-bidi: isolate;
+            margin-top: 4px;
+        }
+        .atf-pdf-legend {
+            margin-bottom: 8px;
             font-size: 8pt;
+            text-align: center;
         }
-        .legend-table {
-            width: auto;
-            margin: 5px auto;
+        .atf-pdf-legend-label {
+            font-weight: bold;
         }
-        .legend-table td {
-            padding: 3px 10px;
+        .atf-pdf-legend-chip {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 8px;
+            margin: 1px 3px;
+            font-size: 7pt;
+            border: 1px solid #dadce0;
+        }
+        .atf-pdf-months-outer {
+            border-collapse: collapse;
+            width: 100%;
+            margin-bottom: 0;
+        }
+        .atf-pdf-months-outer > tbody > tr > td {
+            border: none;
+            padding: 4px;
+            vertical-align: top;
+        }
+        .atf-pdf-month {
+            page-break-inside: avoid;
+            margin-bottom: 4px;
+        }
+        .atf-pdf-month-title {
+            font-weight: bold;
+            font-size: 9pt;
+            margin: 2px 0 4px;
+            text-align: center;
+        }
+        .atf-pdf-grid {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 6pt;
+            table-layout: fixed;
+            margin-bottom: 0;
+        }
+        .atf-pdf-grid th {
+            background-color: #f1f3f4;
+            padding: 2px 1px;
+            border: 1px solid #ddd;
+            font-size: 6pt;
+            text-align: center;
+            font-weight: bold;
+        }
+        .atf-pdf-grid td {
+            border: 1px solid #e8eaed;
+            vertical-align: top;
+            padding: 2px;
+            min-height: 36pt;
+            text-align: center;
+        }
+        .atf-pdf-day.atf-pdf-empty {
+            background: #fafafa;
+            border: 1px solid #eee;
+        }
+        .atf-pdf-weekend {
+            background: #f8f9fa;
+        }
+        .atf-pdf-today {
+            border: 2px solid #1a73e8 !important;
+        }
+        .atf-pdf-outside {
+            opacity: 0.45;
+        }
+        .atf-pdf-daynum {
+            font-weight: bold;
+            font-size: 7pt;
+            margin-bottom: 2px;
+            text-align: center;
+        }
+        .atf-pdf-chip {
+            font-size: 5.5pt;
+            line-height: 1.15;
+            padding: 1px 2px;
+            margin: 0 0 1px 0;
+            border-radius: 2px;
+            word-wrap: break-word;
+            text-align: center;
+        }
+        .atf-pdf-more {
+            font-size: 5.5pt;
+            color: #70757a;
+            font-weight: bold;
+            margin-top: 1px;
         }
     </style>';
 
@@ -200,8 +253,8 @@ if ($format === 'excel') {
 
     $html .= '<br>';
 
-    // Render table of courses
-    $html .= '<table>';
+    // Summary table of courses / events.
+    $html .= '<table class="atf-pdf-data-table">';
     $html .= '<tr>';
     $html .= '<th>' . get_string('coursename', 'local_annualtrainingforecast') . '</th>';
     $html .= '<th>' . get_string('parentcourse', 'local_annualtrainingforecast') . '</th>';
@@ -236,92 +289,8 @@ if ($format === 'excel') {
     }
     $html .= '</table>';
 
-    $html .= '<div class="center subtitle">' . get_string('ganttview', 'local_annualtrainingforecast') . '</div>';
+    $html .= pdf_calendar_builder::build_html($data);
 
-    // Legend - place it above the Gantt chart for better layout
-    $html .= '<table class="legend-table" style="width: 100%;">';
-    $html .= '<tr>';
-    $html .= '<td style="background-color: ' . $statusColors[0] . ';">' . $statusStrings[0] . '</td>';
-    $html .= '<td style="background-color: ' . $statusColors[1] . ';">' . $statusStrings[1] . '</td>';
-    $html .= '<td style="background-color: ' . $statusColors[2] . ';">' . $statusStrings[2] . '</td>';
-    $html .= '<td style="background-color: ' . $statusColors[3] . ';">' . $statusStrings[3] . '</td>';
-    $html .= '</tr>';
-    $html .= '</table>';
-
-    // Simple table-based Gantt chart
-    $html .= '<table class="compact-table">';
-
-    // Header row with months
-    $html .= '<tr>';
-    $html .= '<th style="width: 180px;">Course</th>';
-
-    // Calculate column count based on months
-    $columnCount = count($months);
-    $columnWidth = (100 - 20) / $columnCount; // 20% for the course name column
-
-    foreach ($months as $month) {
-        $html .= '<th style="width: ' . $columnWidth . '%;">' . $month['label'] . '</th>';
-    }
-    $html .= '</tr>';
-
-    // One row per course
-    foreach ($data['items'] as $item) {
-        $isgeneral = !empty($item['isgeneralevent']);
-        $rowcolor = $isgeneral ? '#dadce0' : $statusColors[$item['status']];
-
-        $html .= '<tr>';
-
-        // Course name cell
-        $html .= '<td style="width: 180px;">';
-        $html .= '<strong>' . htmlspecialchars($item['name']) . '</strong><br>';
-        $html .= '<small>' . htmlspecialchars($isgeneral ? $generallabel : $item['parentname']) . '</small>';
-        $html .= '</td>';
-
-        // Calculate which cells should be colored
-        $itemStart = max($item['start'], $startTimestamp);
-        $itemEnd = min($item['end'], $endTimestamp);
-
-        $currentMonthDate = new \DateTime('@' . $startTimestamp);
-        $currentMonthDate->setTime(0, 0, 0);
-
-        for ($i = 0; $i < $columnCount; $i++) {
-            $monthStart = $currentMonthDate->getTimestamp();
-            $currentMonthDate->modify('first day of next month');
-            $monthEnd = $currentMonthDate->getTimestamp() - 1;
-
-            // Check if this month overlaps with the course duration
-            $isInRange = ($itemStart <= $monthEnd && $itemEnd >= $monthStart);
-
-            if ($isInRange) {
-                $html .= '<td style="background-color: ' . $rowcolor . ';">';
-
-                // Only show dates if there's enough space
-                if ($columnCount <= 12) {
-                    // If this is the first or last month of the course, show the dates
-                    if ($i == 0 || $monthStart <= $itemStart && $itemStart <= $monthEnd) {
-                        $html .= '<small>' . userdate($itemStart, 'd M') . '</small>';
-                    }
-
-                    if ($i == ($columnCount - 1) || $monthStart <= $itemEnd && $itemEnd <= $monthEnd) {
-                        if ($i == 0 || $monthStart <= $itemStart && $itemStart <= $monthEnd) {
-                            $html .= ' - ';
-                        }
-                        $html .= '<small>' . userdate($itemEnd, 'd M') . '</small>';
-                    }
-                }
-
-                $html .= '</td>';
-            } else {
-                $html .= '<td></td>';
-            }
-        }
-
-        $html .= '</tr>';
-    }
-    $html .= '</table>';
-
-/*    echo $html;
-    die;*/
     $mpdf->WriteHTML($html);
 
     $filename = 'training_forecast_' . $viewtype . '_' . date('Y-m-d') . '.pdf';
