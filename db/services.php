@@ -70,12 +70,32 @@ $functions = [
         'ajax'          => true,
         'capabilities'  => 'local/annualtrainingforecast:managecourses'
     ],
+    'local_annualtrainingforecast_get_forecast_data' => [
+        'classname'     => 'local_annualtrainingforecast_external',
+        'methodname'    => 'get_forecast_data',
+        'classpath'     => 'local/annualtrainingforecast/externallib.php',
+        'description'   => 'Get Gantt forecast timeline data',
+        'type'          => 'read',
+        'ajax'          => true,
+        'capabilities'  => 'local/annualtrainingforecast:viewforecast'
+    ],
+    'local_annualtrainingforecast_get_filters' => [
+        'classname'     => 'local_annualtrainingforecast_external',
+        'methodname'    => 'get_filters',
+        'classpath'     => 'local/annualtrainingforecast/externallib.php',
+        'description'   => 'Get forecast filter options',
+        'type'          => 'read',
+        'ajax'          => true,
+        'capabilities'  => 'local/annualtrainingforecast:viewforecast'
+    ],
 ];
 
 $services = [
     'Annual Training Forecast' => [
         'functions' => [
             'local_annualtrainingforecast_get_gantt_data',
+            'local_annualtrainingforecast_get_forecast_data',
+            'local_annualtrainingforecast_get_filters',
             'local_annualtrainingforecast_update_iteration_status',
             'local_annualtrainingforecast_create_generalevent',
             'local_annualtrainingforecast_update_generalevent',

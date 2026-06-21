@@ -246,6 +246,192 @@ class api {
     }
 
     /**
+     * Get forecast data for the Gantt timeline (date range + filters).
+     *
+     * @param int $startdate Range start unix timestamp
+     * @param int $enddate Range end unix timestamp
+     * @param string $status Status filter (status class name)
+     * @param string $category Parent course name filter
+     * @param int $managerid Modified-by user id filter
+     * @param string $search Search text
+     * @return array{trainings: array, events: array}
+     */
+    public static function get_forecast_data(
+        int $startdate,
+        int $enddate,
+        string $status = '',
+        string $category = '',
+        int $managerid = 0,
+        string $search = ''
+    ): array {
+        global $DB;
+
+        $statusclasses = [
+            0 => 'upcoming',
+            1 => 'inprogress',
+            2 => 'completed',
+            3 => 'cancelled',
+        ];
+
+        $sql = "SELECT i.*, c.name AS parentname,
+                       u.firstname, u.lastname, u.id AS manageruserid,
+                       mc.startdate AS moodle_startdate, mc.enddate AS moodle_enddate
+                  FROM {local_atf_iterations} i
+                  JOIN {local_atf_courses} c ON i.parentid = c.id
+             LEFT JOIN {user} u ON i.modifiedby = u.id
+             LEFT JOIN {course} mc ON i.moodlecourseid = mc.id
+                 WHERE (i.startdate BETWEEN :startdate1 AND :enddate1)
+                    OR (i.enddate BETWEEN :startdate2 AND :enddate2)
+                    OR (i.startdate <= :startdate3 AND i.enddate >= :enddate3)
+              ORDER BY i.startdate ASC";
+
+        $params = [
+            'startdate1' => $startdate,
+            'enddate1' => $enddate,
+            'startdate2' => $startdate,
+            'enddate2' => $enddate,
+            'startdate3' => $startdate,
+            'enddate3' => $enddate,
+        ];
+
+        $iterations = $DB->get_records_sql($sql, $params);
+        $trainings = [];
+        $searchlc = core_text::strtolower(trim($search));
+
+        foreach ($iterations as $iteration) {
+            $itemstart = !empty($iteration->moodle_startdate) ? $iteration->moodle_startdate : $iteration->startdate;
+            $itemend = !empty($iteration->moodle_enddate) ? $iteration->moodle_enddate : $iteration->enddate;
+
+            if (empty($itemend) || $itemend <= $itemstart) {
+                $parentcourse = $DB->get_record('local_atf_courses', ['id' => $iteration->parentid]);
+                if ($parentcourse && !empty($parentcourse->duration)) {
+                    $startday = strtotime(date('Y-m-d 00:00:00', $itemstart));
+                    $itemend = strtotime('+' . ($parentcourse->duration - 1) . ' days', $startday);
+                    $itemend = strtotime('23:59:59', $itemend);
+                } else {
+                    $startday = strtotime(date('Y-m-d 00:00:00', $itemstart));
+                    $itemend = strtotime('23:59:59', $startday);
+                }
+            }
+
+            $itemstart = strtotime(date('Y-m-d 00:00:00', $itemstart));
+            $itemend = strtotime(date('Y-m-d 23:59:59', $itemend));
+
+            $statusclass = $statusclasses[$iteration->status] ?? 'upcoming';
+
+            if ($status !== '' && $statusclass !== $status) {
+                continue;
+            }
+            if ($category !== '' && $iteration->parentname !== $category) {
+                continue;
+            }
+            if ($managerid > 0 && (int) $iteration->modifiedby !== $managerid) {
+                continue;
+            }
+            if ($searchlc !== '') {
+                $haystack = core_text::strtolower($iteration->name . ' ' . $iteration->parentname);
+                if (strpos($haystack, $searchlc) === false) {
+                    continue;
+                }
+            }
+
+            $managername = '';
+            if (!empty($iteration->firstname) || !empty($iteration->lastname)) {
+                $managername = trim($iteration->firstname . ' ' . $iteration->lastname);
+            }
+
+            $trainings[] = [
+                'id' => (int) $iteration->id,
+                'name' => $iteration->name,
+                'category' => $iteration->parentname,
+                'managername' => $managername,
+                'startdate' => (int) $itemstart,
+                'enddate' => (int) $itemend,
+                'status' => $statusclass,
+                'description' => '',
+            ];
+        }
+
+        $events = [];
+        $dbman = $DB->get_manager();
+        $gentable = new \xmldb_table('local_atf_generalevents');
+        if ($dbman->table_exists($gentable)) {
+            $generals = $DB->get_records_select(
+                'local_atf_generalevents',
+                'startdate <= :vr_end AND enddate >= :vr_start',
+                [
+                    'vr_start' => $startdate,
+                    'vr_end' => $enddate,
+                ],
+                'startdate ASC'
+            );
+
+            foreach ($generals as $ge) {
+                if ($searchlc !== '') {
+                    $haystack = core_text::strtolower($ge->name . ' ' . (string) $ge->description);
+                    if (strpos($haystack, $searchlc) === false) {
+                        continue;
+                    }
+                }
+
+                $events[] = [
+                    'id' => (int) $ge->id,
+                    'title' => $ge->name,
+                    'eventdate' => (int) $ge->startdate,
+                    'enddate' => (int) $ge->enddate,
+                    'eventtype' => 'general',
+                    'description' => isset($ge->description) ? (string) $ge->description : '',
+                ];
+            }
+        }
+
+        return [
+            'trainings' => $trainings,
+            'events' => $events,
+        ];
+    }
+
+    /**
+     * Filter dropdown options for the forecast dashboard.
+     *
+     * @return array{categories: array, managers: array, statuses: array}
+     */
+    public static function get_filter_options(): array {
+        global $DB;
+
+        $categories = $DB->get_fieldset_sql(
+            "SELECT DISTINCT c.name
+               FROM {local_atf_courses} c
+           ORDER BY c.name ASC"
+        );
+
+        $managers = $DB->get_records_sql(
+            "SELECT DISTINCT u.id, u.firstname, u.lastname
+               FROM {local_atf_iterations} i
+               JOIN {user} u ON u.id = i.modifiedby
+              WHERE i.modifiedby > 0
+           ORDER BY u.lastname ASC, u.firstname ASC"
+        );
+
+        $statuses = ['upcoming', 'inprogress', 'completed', 'cancelled'];
+
+        return [
+            'categories' => array_values(array_map(fn($c) => ['value' => $c, 'label' => $c], $categories)),
+            'managers' => array_values(array_map(
+                fn($m) => ['value' => (int) $m->id, 'label' => fullname($m)],
+                $managers
+            )),
+            'statuses' => array_map(
+                fn($s) => [
+                    'value' => $s,
+                    'label' => get_string('status_' . $s, 'local_annualtrainingforecast'),
+                ],
+                $statuses
+            ),
+        ];
+    }
+
+    /**
      * Update iteration status
      *
      * @param int $id Iteration ID

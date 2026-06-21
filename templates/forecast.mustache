@@ -1,0 +1,154 @@
+{{!
+    @template local_annualtrainingforecast/forecast
+    Annual Gantt Forecast dashboard.
+    Context: \local_annualtrainingforecast\output\forecast_page
+}}
+<script type="application/json" id="gantt-strings-data">{{{stringsJson}}}</script>
+<div id="gantt-forecast-app" class="gantt-forecast-app" role="main">
+
+  <div class="gantt-topbar">
+    <div class="gantt-topbar__left">
+      <h1 class="gantt-topbar__title">{{strings.pageheading}}</h1>
+    </div>
+
+    <div class="gantt-topbar__center">
+      <button class="gantt-btn gantt-btn--nav" id="gantt-prev"
+              aria-label="{{strings.previous}}" title="{{strings.previous}}">&#8249;</button>
+      <button class="gantt-btn gantt-btn--today" id="gantt-today"
+              aria-label="{{strings.today}}">{{strings.today}}</button>
+      <button class="gantt-btn gantt-btn--nav" id="gantt-next"
+              aria-label="{{strings.next}}" title="{{strings.next}}">&#8250;</button>
+      <span class="gantt-period-label" id="gantt-period-label" aria-live="polite"></span>
+    </div>
+
+    <div class="gantt-topbar__right">
+      <div class="gantt-view-switcher" role="group" aria-label="View mode">
+        <button class="gantt-view-btn" data-view="month">{{strings.month}}</button>
+        <button class="gantt-view-btn" data-view="quarter">{{strings.quarter}}</button>
+        <button class="gantt-view-btn" data-view="halfyear">{{strings.halfyear}}</button>
+        <button class="gantt-view-btn gantt-view-btn--active" data-view="year">{{strings.year}}</button>
+      </div>
+      {{#canmanage}}
+      <a href="{{manageurl}}" class="gantt-btn gantt-btn--add"
+         aria-label="{{strings.addtraining}}">{{strings.addtraining}}</a>
+      {{/canmanage}}
+      {{#canaddevent}}
+      <button class="gantt-btn gantt-btn--add gantt-btn--add-event" id="gantt-add-event"
+              aria-label="{{strings.addevent}}">{{strings.addevent}}</button>
+      {{/canaddevent}}
+      {{#canreports}}
+      <a href="{{reportsurl}}" class="gantt-btn"
+         aria-label="{{strings.reports}}">{{strings.reports}}</a>
+      {{/canreports}}
+    </div>
+  </div>
+
+  <div class="gantt-filterbar">
+    <div class="gantt-filter gantt-filter--search">
+      <label for="gantt-search" class="sr-only">{{strings.search}}</label>
+      <input id="gantt-search" type="search" class="gantt-input"
+             placeholder="{{strings.search}}" aria-label="{{strings.search}}"/>
+    </div>
+    <div class="gantt-filter">
+      <label for="gantt-filter-category" class="sr-only">{{strings.lbl_category}}</label>
+      <select id="gantt-filter-category" class="gantt-select" aria-label="{{strings.lbl_category}}">
+        <option value="">{{strings.allcats}}</option>
+      </select>
+    </div>
+    <div class="gantt-filter">
+      <label for="gantt-filter-status" class="sr-only">{{strings.lbl_status}}</label>
+      <select id="gantt-filter-status" class="gantt-select" aria-label="{{strings.lbl_status}}">
+        <option value="">{{strings.allstatuses}}</option>
+        <option value="upcoming">{{strings.upcoming}}</option>
+        <option value="inprogress">{{strings.inprogress}}</option>
+        <option value="completed">{{strings.completed}}</option>
+        <option value="cancelled">{{strings.cancelled}}</option>
+      </select>
+    </div>
+    <div class="gantt-filter">
+      <label for="gantt-filter-manager" class="sr-only">{{strings.filtermanager}}</label>
+      <select id="gantt-filter-manager" class="gantt-select" aria-label="{{strings.filtermanager}}">
+        <option value="">{{strings.allmgrs}}</option>
+      </select>
+    </div>
+    <div class="gantt-filter gantt-filter--actions">
+      <a href="{{exportexcel}}" class="gantt-btn gantt-btn--export" id="gantt-export-excel"
+         aria-label="{{strings.exportexcel}}">&#128196; {{strings.exportexcel}}</a>
+      <a href="{{exportpdf}}" class="gantt-btn gantt-btn--export" id="gantt-export-pdf"
+         aria-label="{{strings.exportpdf}}">&#128195; {{strings.exportpdf}}</a>
+    </div>
+  </div>
+
+  <div class="gantt-legend" aria-label="{{strings.legend}}">
+    <span class="gantt-legend__item gantt-legend__item--upcoming">{{strings.upcoming}}</span>
+    <span class="gantt-legend__item gantt-legend__item--inprogress">{{strings.inprogress}}</span>
+    <span class="gantt-legend__item gantt-legend__item--completed">{{strings.completed}}</span>
+    <span class="gantt-legend__item gantt-legend__item--cancelled">{{strings.cancelled}}</span>
+    <span class="gantt-legend__item gantt-legend__item--general">{{strings.general}}</span>
+    <span class="gantt-legend__hint">&#128269; {{strings.legend_hint}}</span>
+  </div>
+
+  <div id="gantt-loading" class="gantt-loading" aria-live="polite" style="display:none">
+    <span class="gantt-loading__spinner"></span><span>{{strings.loading}}</span>
+  </div>
+
+  <div class="gantt-main" id="gantt-main">
+    <div class="gantt-names" id="gantt-names" role="list" aria-label="{{strings.traininglist}}">
+      <div class="gantt-names__header">{{strings.trainingcolumn}}</div>
+    </div>
+
+    <div class="gantt-timeline-wrapper" id="gantt-timeline-wrapper"
+         aria-label="{{strings.timelinearea}}" tabindex="0">
+      <div class="gantt-timeline-header" id="gantt-timeline-header"></div>
+      <div class="gantt-timeline-body" id="gantt-timeline-body">
+        <div class="gantt-grid" id="gantt-grid"></div>
+        <div class="gantt-rows" id="gantt-rows"></div>
+        <div class="gantt-today-marker" id="gantt-today-marker" aria-hidden="true"></div>
+        <div class="gantt-events-layer" id="gantt-events-layer"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="gantt-tooltip" id="gantt-tooltip" role="tooltip" aria-hidden="true"></div>
+
+  <div class="gantt-modal-overlay" id="gantt-modal-event" hidden aria-modal="true" role="dialog"
+       aria-labelledby="gantt-modal-event-title">
+    <div class="gantt-modal">
+      <div class="gantt-modal__header">
+        <h2 class="gantt-modal__title" id="gantt-modal-event-title">{{strings.addevent}}</h2>
+        <button class="gantt-modal__close" id="gantt-event-close" aria-label="{{strings.close}}">&times;</button>
+      </div>
+      <div class="gantt-modal__body">
+        <input type="hidden" id="event-id" value="0"/>
+        <div class="gantt-form-row">
+          <label for="event-title" class="gantt-label">{{strings.lbl_event_title}} <span class="gantt-required">*</span></label>
+          <input type="text" id="event-title" class="gantt-input" required placeholder="{{strings.ph_event_title}}"/>
+        </div>
+        <div class="gantt-form-row gantt-form-row--2col">
+          <div>
+            <label for="event-startdate" class="gantt-label">{{strings.lbl_event_date}} <span class="gantt-required">*</span></label>
+            <input type="date" id="event-startdate" class="gantt-input" required/>
+          </div>
+          <div>
+            <label for="event-enddate" class="gantt-label">{{strings.eventenddate}}</label>
+            <input type="date" id="event-enddate" class="gantt-input"/>
+          </div>
+        </div>
+        <div class="gantt-form-row">
+          <label for="event-description" class="gantt-label">{{strings.lbl_description}}</label>
+          <textarea id="event-description" class="gantt-textarea" rows="2"></textarea>
+        </div>
+        <div id="gantt-event-error" class="gantt-form-error" hidden></div>
+      </div>
+      <div class="gantt-modal__footer">
+        <button id="event-delete-btn" class="gantt-btn gantt-btn--danger" style="display:none">
+          {{strings.delete}}
+        </button>
+        <span style="flex:1"></span>
+        <button id="event-cancel-btn" class="gantt-btn gantt-btn--primary">{{strings.cancel}}</button>
+        <button id="event-save-btn" class="gantt-btn gantt-btn--success">{{strings.save}}</button>
+      </div>
+    </div>
+  </div>
+
+</div>

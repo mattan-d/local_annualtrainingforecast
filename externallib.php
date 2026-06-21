@@ -307,4 +307,131 @@ class local_annualtrainingforecast_external extends external_api {
             'message' => new external_value(PARAM_TEXT, 'Error message if any')
         ]);
     }
+
+    /**
+     * Get forecast data parameters
+     *
+     * @return external_function_parameters
+     */
+    public static function get_forecast_data_parameters() {
+        return new external_function_parameters([
+            'startdate' => new external_value(PARAM_INT, 'Range start timestamp'),
+            'enddate' => new external_value(PARAM_INT, 'Range end timestamp'),
+            'status' => new external_value(PARAM_ALPHA, 'Status filter', VALUE_DEFAULT, ''),
+            'category' => new external_value(PARAM_TEXT, 'Category filter', VALUE_DEFAULT, ''),
+            'managerid' => new external_value(PARAM_INT, 'Manager user id filter', VALUE_DEFAULT, 0),
+            'search' => new external_value(PARAM_TEXT, 'Search text', VALUE_DEFAULT, ''),
+        ]);
+    }
+
+    /**
+     * Get forecast data for Gantt timeline
+     *
+     * @param int $startdate
+     * @param int $enddate
+     * @param string $status
+     * @param string $category
+     * @param int $managerid
+     * @param string $search
+     * @return array
+     */
+    public static function get_forecast_data(
+        $startdate,
+        $enddate,
+        $status = '',
+        $category = '',
+        $managerid = 0,
+        $search = ''
+    ) {
+        $params = self::validate_parameters(self::get_forecast_data_parameters(), [
+            'startdate' => $startdate,
+            'enddate' => $enddate,
+            'status' => $status,
+            'category' => $category,
+            'managerid' => $managerid,
+            'search' => $search,
+        ]);
+
+        $context = context_system::instance();
+        self::validate_context($context);
+        require_capability('local/annualtrainingforecast:viewforecast', $context);
+
+        return \api::get_forecast_data(
+            $params['startdate'],
+            $params['enddate'],
+            $params['status'],
+            $params['category'],
+            $params['managerid'],
+            $params['search']
+        );
+    }
+
+    /**
+     * Get forecast data return definition
+     *
+     * @return external_description
+     */
+    public static function get_forecast_data_returns() {
+        $training = new external_single_structure([
+            'id' => new external_value(PARAM_INT, 'Iteration id'),
+            'name' => new external_value(PARAM_TEXT, 'Name'),
+            'category' => new external_value(PARAM_TEXT, 'Parent course'),
+            'managername' => new external_value(PARAM_TEXT, 'Manager name'),
+            'startdate' => new external_value(PARAM_INT, 'Start timestamp'),
+            'enddate' => new external_value(PARAM_INT, 'End timestamp'),
+            'status' => new external_value(PARAM_ALPHA, 'Status class'),
+            'description' => new external_value(PARAM_RAW, 'Description', VALUE_DEFAULT, ''),
+        ]);
+        $event = new external_single_structure([
+            'id' => new external_value(PARAM_INT, 'Event id'),
+            'title' => new external_value(PARAM_TEXT, 'Title'),
+            'eventdate' => new external_value(PARAM_INT, 'Start timestamp'),
+            'enddate' => new external_value(PARAM_INT, 'End timestamp', VALUE_DEFAULT, 0),
+            'eventtype' => new external_value(PARAM_ALPHA, 'Event type', VALUE_DEFAULT, 'general'),
+            'description' => new external_value(PARAM_RAW, 'Description', VALUE_DEFAULT, ''),
+        ]);
+        return new external_single_structure([
+            'trainings' => new external_multiple_structure($training),
+            'events' => new external_multiple_structure($event),
+        ]);
+    }
+
+    /**
+     * Get filter options parameters
+     *
+     * @return external_function_parameters
+     */
+    public static function get_filters_parameters() {
+        return new external_function_parameters([]);
+    }
+
+    /**
+     * Get filter dropdown options
+     *
+     * @return array
+     */
+    public static function get_filters() {
+        $context = context_system::instance();
+        self::validate_context($context);
+        require_capability('local/annualtrainingforecast:viewforecast', $context);
+
+        return \api::get_filter_options();
+    }
+
+    /**
+     * Get filter options return definition
+     *
+     * @return external_description
+     */
+    public static function get_filters_returns() {
+        $kv = new external_single_structure([
+            'value' => new external_value(PARAM_RAW, 'Option value'),
+            'label' => new external_value(PARAM_TEXT, 'Option label'),
+        ]);
+        return new external_single_structure([
+            'categories' => new external_multiple_structure($kv),
+            'managers' => new external_multiple_structure($kv),
+            'statuses' => new external_multiple_structure($kv),
+        ]);
+    }
 }
