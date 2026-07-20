@@ -60,14 +60,13 @@ class iteration_form extends \moodleform {
             $mform->setDefault('name', $parentcourse->name);
         }
 
-        // Course category selector
-        $categories = \core_course_category::make_categories_list('moodle/course:create');
-        $mform->addElement('autocomplete', 'category', get_string('category'), $categories);
-        $mform->addHelpButton('category', 'category', 'local_annualtrainingforecast');
-        $mform->addRule('category', get_string('required'), 'required', null, 'client');
-        
-        // Set default category
+        // Moodle course options only apply when adding a new iteration.
         if (empty($iteration)) {
+            // Course category selector (only when creating a real Moodle course)
+            $categories = \core_course_category::make_categories_list('moodle/course:create');
+            $mform->addElement('autocomplete', 'category', get_string('category'), $categories);
+            $mform->addHelpButton('category', 'category', 'local_annualtrainingforecast');
+
             // Try to get the parent course's category first
             if (!empty($parentcourse->moodlecourseid)) {
                 $parentmoodlecourse = $DB->get_record('course', ['id' => $parentcourse->moodlecourseid], 'category');
@@ -77,49 +76,57 @@ class iteration_form extends \moodleform {
                     $mform->setDefault('category', get_config('moodlecourse', 'category'));
                 }
             } else {
-                // Fall back to default category
                 $mform->setDefault('category', get_config('moodlecourse', 'category'));
             }
-        } else if (!empty($iteration->moodlecourseid)) {
-            // For existing iterations, get the current course category
-            $iterationmoodlecourse = $DB->get_record('course', ['id' => $iteration->moodlecourseid], 'category');
-            if ($iterationmoodlecourse) {
-                $mform->setDefault('category', $iterationmoodlecourse->category);
+
+            // Theoretical only — no Moodle course is created or linked
+            $mform->addElement('advcheckbox', 'theoreticalonly',
+                get_string('theoreticalonly', 'local_annualtrainingforecast'),
+                get_string('theoreticalonly_help', 'local_annualtrainingforecast'));
+            // Default to theoretical when the parent has no Moodle course.
+            $mform->setDefault('theoreticalonly', empty($parentcourse->moodlecourseid) ? 1 : 0);
+
+            $mform->addElement('advcheckbox', 'copymaterials',
+                get_string('copymaterials', 'local_annualtrainingforecast'),
+                get_string('copymaterials_help', 'local_annualtrainingforecast'));
+            $mform->setDefault('copymaterials', 1);
+
+            $mform->addElement('advcheckbox', 'linkexisting',
+                get_string('linkexisting', 'local_annualtrainingforecast'),
+                get_string('linkexisting_help', 'local_annualtrainingforecast'));
+            $mform->setDefault('linkexisting', 0);
+
+            $courses = $DB->get_records_sql(
+                "SELECT id, fullname, shortname, category
+                 FROM {course}
+                 WHERE id > 1
+                 ORDER BY fullname"
+            );
+
+            $courseoptions = [0 => get_string('choosedots')];
+            foreach ($courses as $c) {
+                $category = \core_course_category::get($c->category, IGNORE_MISSING);
+                $categoryname = $category ? $category->get_formatted_name() : '';
+                $courseoptions[$c->id] = $categoryname . ' / ' . format_string($c->fullname) . ' (' . $c->shortname . ')';
             }
-        }
 
-        $mform->addElement('advcheckbox', 'copymaterials', 
-            get_string('copymaterials', 'local_annualtrainingforecast'),
-            get_string('copymaterials_help', 'local_annualtrainingforecast'));
-        $mform->setDefault('copymaterials', 1); // Default to checked
-        
-        $mform->addElement('advcheckbox', 'linkexisting', 
-            get_string('linkexisting', 'local_annualtrainingforecast'),
-            get_string('linkexisting_help', 'local_annualtrainingforecast'));
-        $mform->setDefault('linkexisting', 0);
-        
-        // Get all available courses (excluding site course)
-        $courses = $DB->get_records_sql(
-            "SELECT id, fullname, shortname, category 
-             FROM {course} 
-             WHERE id > 1 
-             ORDER BY fullname"
-        );
-        
-        $courseoptions = [0 => get_string('choosedots')];
-        foreach ($courses as $c) {
-            $category = \core_course_category::get($c->category, IGNORE_MISSING);
-            $categoryname = $category ? $category->get_formatted_name() : '';
-            $courseoptions[$c->id] = $categoryname . ' / ' . format_string($c->fullname) . ' (' . $c->shortname . ')';
-        }
-        
-        $mform->addElement('autocomplete', 'existingcourseid', 
-            get_string('existingcourse', 'local_annualtrainingforecast'), 
-            $courseoptions);
-        $mform->hideIf('existingcourseid', 'linkexisting', 'notchecked');
-        
-        $mform->hideIf('copymaterials', 'linkexisting', 'checked');
+            $mform->addElement('autocomplete', 'existingcourseid',
+                get_string('existingcourse', 'local_annualtrainingforecast'),
+                $courseoptions);
+            $mform->hideIf('existingcourseid', 'linkexisting', 'notchecked');
+            $mform->hideIf('existingcourseid', 'theoreticalonly', 'checked');
 
+            $mform->hideIf('copymaterials', 'linkexisting', 'checked');
+            $mform->hideIf('copymaterials', 'theoreticalonly', 'checked');
+            $mform->hideIf('linkexisting', 'theoreticalonly', 'checked');
+            $mform->hideIf('category', 'theoreticalonly', 'checked');
+            $mform->hideIf('category', 'linkexisting', 'checked');
+            $mform->disabledIf('theoreticalonly', 'linkexisting', 'checked');
+            $mform->disabledIf('linkexisting', 'theoreticalonly', 'checked');
+        } else if (empty($iteration->moodlecourseid)) {
+            $mform->addElement('static', 'theoreticalnotice', '',
+                html_writer::span(get_string('theoreticalbadge', 'local_annualtrainingforecast'), 'badge badge-secondary'));
+        }
         // Start date
         $mform->addElement('date_selector', 'startdate', get_string('startdate', 'local_annualtrainingforecast'));
         $mform->addRule('startdate', get_string('required'), 'required', null, 'client');
@@ -177,7 +184,7 @@ class iteration_form extends \moodleform {
                 'startdate' => $iteration->startdate,
                 'enddate' => $iteration->enddate,
                 'status' => $iteration->status,
-                'completed' => $iteration->completed
+                'completed' => $iteration->completed,
             ];
 
             $this->set_data($data);
@@ -202,21 +209,28 @@ class iteration_form extends \moodleform {
             $errors['enddate'] = get_string('enddatebeforestartdate', 'local_annualtrainingforecast');
         }
 
-        // Validate category
-        if (!empty($data['category'])) {
-            try {
-                $category = \core_course_category::get($data['category'], IGNORE_MISSING);
-                if (!$category) {
+        $theoretical = !empty($data['theoreticalonly']);
+        $linkexisting = !empty($data['linkexisting']);
+
+        // Category only required when creating a new Moodle course
+        if (!$theoretical && !$linkexisting) {
+            if (empty($data['category'])) {
+                $errors['category'] = get_string('required');
+            } else {
+                try {
+                    $category = \core_course_category::get($data['category'], IGNORE_MISSING);
+                    if (!$category) {
+                        $errors['category'] = get_string('invalidcategoryid', 'error');
+                    } else if (!$category->can_create_course()) {
+                        $errors['category'] = get_string('nocreateincategory', 'error');
+                    }
+                } catch (\Exception $e) {
                     $errors['category'] = get_string('invalidcategoryid', 'error');
-                } else if (!$category->can_create_course()) {
-                    $errors['category'] = get_string('nocreateincategory', 'error');
                 }
-            } catch (\Exception $e) {
-                $errors['category'] = get_string('invalidcategoryid', 'error');
             }
         }
-        
-        if (!empty($data['linkexisting']) && empty($data['existingcourseid'])) {
+
+        if ($linkexisting && empty($data['existingcourseid'])) {
             $errors['existingcourseid'] = get_string('required');
         }
 

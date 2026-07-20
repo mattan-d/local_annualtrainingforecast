@@ -42,17 +42,19 @@ class course_form extends \moodleform {
         $course = $this->_customdata['course'] ?? null;
         $action = $this->_customdata['action'] ?? 'add';
 
-        // Add a radio button to choose between creating a new course or selecting an existing one
+        // Choose between creating a new Moodle course, linking an existing one, or theoretical only.
         $courseOptions = [
             'new' => get_string('createnewcourse', 'local_annualtrainingforecast'),
-            'existing' => get_string('selectexistingcourse', 'local_annualtrainingforecast')
+            'existing' => get_string('selectexistingcourse', 'local_annualtrainingforecast'),
+            'theoretical' => get_string('createtheoreticalcourse', 'local_annualtrainingforecast'),
         ];
 
         $mform->addElement('header', 'coursesourcehdr', get_string('coursesource', 'local_annualtrainingforecast'));
         $mform->addElement('select', 'coursesource', get_string('coursesource', 'local_annualtrainingforecast'), $courseOptions);
         $mform->setDefault('coursesource', 'new');
+        $mform->addHelpButton('coursesource', 'coursesource', 'local_annualtrainingforecast');
 
-        // New course section
+        // New / theoretical course section
         $mform->addElement('header', 'newcoursehdr', get_string('newcoursedetails', 'local_annualtrainingforecast'));
 
         // Course name
@@ -60,7 +62,7 @@ class course_form extends \moodleform {
             ['size' => '64', 'maxlength' => 255]);
         $mform->setType('name', PARAM_TEXT);
 
-        // Course category with autocomplete
+        // Course category with autocomplete (only for real Moodle course creation)
         $displaylist = \core_course_category::make_categories_list('moodle/course:create');
         $mform->addElement('autocomplete', 'category', get_string('coursecategory'), $displaylist, [
             'showsuggestions' => true,
@@ -150,6 +152,9 @@ class course_form extends \moodleform {
                         $data['category'] = $existingcourse->category;
                     }
                 }
+            } else {
+                // No linked Moodle course — theoretical / planned only.
+                $data['coursesource'] = 'theoretical';
             }
 
             $this->set_data($data);
@@ -169,15 +174,20 @@ class course_form extends \moodleform {
         require(['jquery'], function($) {
             function toggleCourseSections() {
                 var courseSource = $('#id_coursesource').val();
-                
-                if (courseSource === 'new') {
-                    // Show new course section, hide existing course section
+
+                if (courseSource === 'new' || courseSource === 'theoretical') {
+                    // Show details for new or theoretical course; hide existing course section
                     $('#fgroup_id_newcoursehdr').show();
                     $('#fitem_id_name').show();
-                    $('#fitem_id_category').show();
                     $('#fitem_id_description').show();
                     $('#fitem_id_duration').show();
-                    
+                    // Category only needed when creating a real Moodle course
+                    if (courseSource === 'new') {
+                        $('#fitem_id_category').show();
+                    } else {
+                        $('#fitem_id_category').hide();
+                    }
+
                     $('#fgroup_id_existingcoursehdr').hide();
                     $('#fitem_id_existingcourseid').hide();
                     $('#fitem_id_existing_duration').hide();
@@ -188,16 +198,16 @@ class course_form extends \moodleform {
                     $('#fitem_id_category').hide();
                     $('#fitem_id_description').hide();
                     $('#fitem_id_duration').hide();
-                    
+
                     $('#fgroup_id_existingcoursehdr').show();
                     $('#fitem_id_existingcourseid').show();
                     $('#fitem_id_existing_duration').show();
                 }
             }
-            
+
             // Initial setup
             toggleCourseSections();
-            
+
             // Update on change
             $('#id_coursesource').change(function() {
                 toggleCourseSections();
@@ -219,26 +229,27 @@ class course_form extends \moodleform {
         $errors = parent::validation($data, $files);
 
         // Only validate fields based on the selected course source
-        if (isset($data['coursesource']) && $data['coursesource'] === 'new') {
-            // Validate new course fields only
+        if (isset($data['coursesource']) && ($data['coursesource'] === 'new' || $data['coursesource'] === 'theoretical')) {
             if (empty($data['name'])) {
                 $errors['name'] = get_string('required');
             }
 
-            if (empty($data['category'])) {
-                $errors['category'] = get_string('required');
-            } else {
-                // Validate that the category exists and user has permission
-                $category = \core_course_category::get($data['category'], IGNORE_MISSING);
-                if (!$category) {
-                    $errors['category'] = get_string('invalidcategory', 'error');
-                } else if (!$category->can_create_course()) {
-                    $errors['category'] = get_string('cannotcreatecourse', 'error');
-                }
-            }
-
             if (empty($data['duration']) || !is_numeric($data['duration']) || $data['duration'] <= 0) {
                 $errors['duration'] = get_string('required');
+            }
+
+            // Category is only required when creating a real Moodle course
+            if ($data['coursesource'] === 'new') {
+                if (empty($data['category'])) {
+                    $errors['category'] = get_string('required');
+                } else {
+                    $category = \core_course_category::get($data['category'], IGNORE_MISSING);
+                    if (!$category) {
+                        $errors['category'] = get_string('invalidcategory', 'error');
+                    } else if (!$category->can_create_course()) {
+                        $errors['category'] = get_string('cannotcreatecourse', 'error');
+                    }
+                }
             }
         } elseif (isset($data['coursesource']) && $data['coursesource'] === 'existing') {
             // Validate existing course fields only

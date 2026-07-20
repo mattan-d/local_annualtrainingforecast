@@ -82,20 +82,22 @@ if ($action == 'add' || $action == 'edit') {
                 $record = new stdClass();
                 $record->id = $id;
 
-                if ($data->coursesource === 'new') {
+                if ($data->coursesource === 'new' || $data->coursesource === 'theoretical') {
                     $record->name = $data->name;
                     $record->description = $data->description;
                     $record->duration = $data->duration;
 
-                    // Update the Moodle course if it exists
-                    $moodlecourseid = \course_manager::get_moodle_course_id_for_parent($id);
-                    if ($moodlecourseid) {
-                        $moodlecourse = $DB->get_record('course', ['id' => $moodlecourseid]);
-                        if ($moodlecourse) {
-                            $moodlecourse->fullname = $data->name;
-                            $moodlecourse->summary = $data->description;
-                            $moodlecourse->timemodified = $now;
-                            $DB->update_record('course', $moodlecourse);
+                    // Update the Moodle course if it exists (theoretical courses have none)
+                    if ($data->coursesource === 'new') {
+                        $moodlecourseid = \course_manager::get_moodle_course_id_for_parent($id);
+                        if ($moodlecourseid) {
+                            $moodlecourse = $DB->get_record('course', ['id' => $moodlecourseid]);
+                            if ($moodlecourse) {
+                                $moodlecourse->fullname = $data->name;
+                                $moodlecourse->summary = $data->description;
+                                $moodlecourse->timemodified = $now;
+                                $DB->update_record('course', $moodlecourse);
+                            }
                         }
                     }
                 } else {
@@ -118,7 +120,14 @@ if ($action == 'add' || $action == 'edit') {
             } else {
                 // Add new course
                 try {
-                    if ($data->coursesource === 'new') {
+                    if ($data->coursesource === 'theoretical') {
+                        // Planned / theoretical course — ATF record only, no Moodle course
+                        $record = new stdClass();
+                        $record->name = $data->name;
+                        $record->description = $data->description;
+                        $record->duration = $data->duration;
+                        $record->moodlecourseid = null;
+                    } else if ($data->coursesource === 'new') {
                         // Create a new Moodle course
                         $moodlecourseid = \course_manager::create_parent_course($data);
 
@@ -216,13 +225,16 @@ if ($action == 'add' || $action == 'edit') {
             } else {
                 // Add new iteration
                 try {
-                    if (!empty($data->linkexisting) && !empty($data->existingcourseid)) {
+                    if (!empty($data->theoreticalonly)) {
+                        // Theoretical / planned iteration — ATF record only
+                        $moodlecourseid = null;
+                    } else if (!empty($data->linkexisting) && !empty($data->existingcourseid)) {
                         // Link to existing course
                         $moodlecourseid = $data->existingcourseid;
-                        
+
                         // Verify the course exists
                         $existingcourse = $DB->get_record('course', ['id' => $moodlecourseid], '*', MUST_EXIST);
-                        
+
                         // Update the course dates
                         $existingcourse->startdate = $data->startdate;
                         $existingcourse->enddate = $data->enddate;
@@ -234,7 +246,7 @@ if ($action == 'add' || $action == 'edit') {
                         $parentMoodleCourseId = \course_manager::get_moodle_course_id_for_parent($parentid);
 
                         if (!$parentMoodleCourseId) {
-                            \core\notification::error('Parent course does not have an associated Moodle course');
+                            \core\notification::error(get_string('parenthasnomoodlecourse', 'local_annualtrainingforecast'));
                             redirect(new moodle_url('/local/annualtrainingforecast/manage.php'));
                         }
 
@@ -260,7 +272,7 @@ if ($action == 'add' || $action == 'edit') {
                         \core\notification::success(get_string('instanceadded', 'local_annualtrainingforecast'));
                     } else {
                         \core\notification::error('Failed to add course instance');
-                        if (empty($data->linkexisting) && $moodlecourseid) {
+                        if (empty($data->theoreticalonly) && empty($data->linkexisting) && $moodlecourseid) {
                             delete_course($moodlecourseid, false);
                         }
                     }
@@ -404,7 +416,14 @@ if (($action == 'add' || $action == 'edit') && isset($form)) {
         foreach ($courses as $course) {
             echo html_writer::start_div('course-item card mb-3');
             echo html_writer::start_div('card-header d-flex justify-content-between align-items-center');
-            echo html_writer::tag('h5', format_string($course->name), ['class' => 'mb-0']);
+            $coursetitle = format_string($course->name);
+            if (empty($course->moodlecourseid)) {
+                $coursetitle .= ' ' . html_writer::span(
+                    get_string('theoreticalbadge', 'local_annualtrainingforecast'),
+                    'badge badge-secondary ml-2'
+                );
+            }
+            echo html_writer::tag('h5', $coursetitle, ['class' => 'mb-0']);
 
             // Course actions
             echo html_writer::start_div('course-actions');
@@ -461,7 +480,14 @@ if (($action == 'add' || $action == 'edit') && isset($form)) {
                 echo html_writer::start_tag('tbody');
                 foreach ($iterations as $iteration) {
                     echo html_writer::start_tag('tr');
-                    echo html_writer::tag('td', format_string($iteration->name));
+                    $iterationname = format_string($iteration->name);
+                    if (empty($iteration->moodlecourseid)) {
+                        $iterationname .= ' ' . html_writer::span(
+                            get_string('theoreticalbadge', 'local_annualtrainingforecast'),
+                            'badge badge-secondary'
+                        );
+                    }
+                    echo html_writer::tag('td', $iterationname);
                     echo html_writer::tag('td', userdate($iteration->startdate, get_string('strftimedatefullshort', 'core_langconfig')));
                     echo html_writer::tag('td', userdate($iteration->enddate, get_string('strftimedatefullshort', 'core_langconfig')));
 
