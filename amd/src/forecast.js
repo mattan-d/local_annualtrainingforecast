@@ -47,12 +47,19 @@ define(['core/ajax', 'core/notification', 'core/config'], function(Ajax, Notific
     // Entry point
     // =========================================================================
 
+    const STORAGE_VIEW = 'atf_forecast_viewmode';
+    const STORAGE_PERIOD = 'atf_forecast_periodstart';
+
     function init(contextId, canManage, canAddEvent) {
         state.contextId   = contextId;
         state.canManage   = !!canManage;
         state.canAddEvent = !!canAddEvent;
         state.manageUrl   = Cfg.wwwroot + '/local/annualtrainingforecast/manage.php';
         state.periodStart = periodStartFor(VIEW.YEAR, new Date());
+
+        // Restore the last-used view mode / period so refreshing or returning
+        // from the manage page keeps the user's chosen view.
+        restoreViewState();
 
         // Load localized strings embedded by the template
         const strEl = document.getElementById('gantt-strings-data');
@@ -64,8 +71,40 @@ define(['core/ajax', 'core/notification', 'core/config'], function(Ajax, Notific
         window.addEventListener('resize', () => { setAppHeight(); renderAll(); });
 
         bindControls();
+        applyActiveViewButton();
         loadFilters();
         loadData();
+    }
+
+    function restoreViewState() {
+        try {
+            const validViews = [VIEW.MONTH, VIEW.QUARTER, VIEW.HALFYEAR, VIEW.YEAR];
+            const savedView = window.localStorage.getItem(STORAGE_VIEW);
+            if (savedView && validViews.indexOf(savedView) !== -1) {
+                state.viewMode      = savedView;
+                state.colResolution = defaultResolution(savedView);
+            }
+            const savedPeriod = window.localStorage.getItem(STORAGE_PERIOD);
+            const ts = savedPeriod ? parseInt(savedPeriod, 10) : NaN;
+            const anchor = !isNaN(ts) ? new Date(ts) : new Date();
+            state.periodStart = periodStartFor(state.viewMode, anchor);
+        } catch (e) {
+            state.periodStart = periodStartFor(state.viewMode, new Date());
+        }
+    }
+
+    function saveViewState() {
+        try {
+            window.localStorage.setItem(STORAGE_VIEW, state.viewMode);
+            window.localStorage.setItem(STORAGE_PERIOD, String(state.periodStart.getTime()));
+        } catch (e) {
+            // Storage unavailable (private mode / quota) — non-fatal.
+        }
+    }
+
+    function applyActiveViewButton() {
+        document.querySelectorAll('.gantt-view-btn').forEach(btn =>
+            btn.classList.toggle('gantt-view-btn--active', btn.dataset.view === state.viewMode));
     }
 
     // =========================================================================
@@ -260,6 +299,7 @@ define(['core/ajax', 'core/notification', 'core/config'], function(Ajax, Notific
 
     function loadData() {
         readFilters();
+        saveViewState();
         const range = visibleRange();
         showLoading(true);
         hideEmpty();

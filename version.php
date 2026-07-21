@@ -24,8 +24,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2026121011;        // The current plugin version (Date: YYYYMMDDXX)
+$plugin->version   = 2026121012;        // The current plugin version (Date: YYYYMMDDXX)
 $plugin->requires  = 2022112800;        // Requires this Moodle version
 $plugin->component = 'local_annualtrainingforecast'; // Full name of the plugin
 $plugin->maturity  = MATURITY_ALPHA;
-$plugin->release   = '0.1.6';
+$plugin->release   = '0.1.7';

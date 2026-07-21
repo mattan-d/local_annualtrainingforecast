@@ -125,7 +125,7 @@ class iteration_form extends \moodleform {
             $mform->disabledIf('linkexisting', 'theoreticalonly', 'checked');
         } else if (empty($iteration->moodlecourseid)) {
             $mform->addElement('static', 'theoreticalnotice', '',
-                html_writer::span(get_string('theoreticalbadge', 'local_annualtrainingforecast'), 'badge badge-secondary'));
+                \html_writer::span(get_string('theoreticalbadge', 'local_annualtrainingforecast'), 'badge badge-secondary'));
         }
         // Start date
         $mform->addElement('date_selector', 'startdate', get_string('startdate', 'local_annualtrainingforecast'));

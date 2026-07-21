@@ -414,6 +414,11 @@ body.pagelayout-base .container-fluid { padding: 0 !important; }
   overflow-y: auto;
   position: relative;
   outline: none;
+  /* The chart is time-axis based: columns flow left→right and bars/grid are
+     positioned with physical `left`. Force LTR so it stays aligned on RTL
+     (e.g. Hebrew) pages, where the flex header would otherwise mirror the
+     bars relative to the date labels. */
+  direction: ltr;
 }
 /* Month view: each day has a minimum width, so the body may exceed the
    wrapper width — enable horizontal scrolling only in that case.       */
