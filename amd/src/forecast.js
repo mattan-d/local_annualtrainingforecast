@@ -403,7 +403,24 @@ define(['core/ajax', 'core/notification', 'core/config'], function(Ajax, Notific
         const minBodyPx = isDayRes ? totalDays * DAY_MIN_PX : 0;
 
         const app = document.getElementById('gantt-forecast-app');
-        if (app) app.classList.toggle('gantt--month-view', isDayRes);
+        if (app) {
+            app.classList.toggle('gantt--month-view', isDayRes);
+        }
+
+        // Header and body MUST share the same width, otherwise day-% positions
+        // on bars drift away from the date labels (visible in month / day zoom).
+        const header = document.getElementById('gantt-timeline-header');
+        const body = document.getElementById('gantt-timeline-body');
+        const widthCss = minBodyPx ? minBodyPx + 'px' : '';
+        if (header) {
+            header.style.minWidth = widthCss;
+            header.style.width = widthCss || '100%';
+        }
+        if (body) {
+            body.style.minHeight = totalH + 'px';
+            body.style.minWidth = widthCss;
+            body.style.width = widthCss || '100%';
+        }
 
         renderHeader(cols, totalDays);
         renderGrid(range, cols, totalDays, totalH);
@@ -411,12 +428,6 @@ define(['core/ajax', 'core/notification', 'core/config'], function(Ajax, Notific
         renderBars(range, totalDays);
         renderTodayMarker(range, totalDays, totalH);
         renderMilestones(range, totalDays, totalH);
-
-        const body = document.getElementById('gantt-timeline-body');
-        if (body) {
-            body.style.minHeight = totalH + 'px';
-            body.style.minWidth  = minBodyPx ? minBodyPx + 'px' : '';
-        }
     }
 
     function renderHeader(cols, totalDays) {
@@ -509,36 +520,51 @@ define(['core/ajax', 'core/notification', 'core/config'], function(Ajax, Notific
 
     function renderBars(range, totalDays) {
         const rows = document.getElementById('gantt-rows');
-        if (!rows) return;
+        if (!rows) {
+            return;
+        }
         const stripes = rows.querySelectorAll('.gantt-row-stripe');
 
         state.trainings.forEach((t, idx) => {
             const stripe = stripes[idx];
-            if (!stripe) return;
+            if (!stripe) {
+                return;
+            }
 
-            const tStart = new Date(t.startdate * 1000); tStart.setHours(0, 0, 0, 0);
-            const tEnd   = new Date(t.enddate   * 1000); tEnd.setHours(0, 0, 0, 0);
+            const tStart = new Date(t.startdate * 1000);
+            tStart.setHours(0, 0, 0, 0);
+            const tEnd = new Date(t.enddate * 1000);
+            tEnd.setHours(0, 0, 0, 0);
+
+            // End date is inclusive — use the next day as the exclusive boundary
+            // so a course 15/07–30/07 covers all 16 day columns.
+            const tEndExclusive = new Date(tEnd);
+            tEndExclusive.setDate(tEndExclusive.getDate() + 1);
 
             const dispStart = tStart < range.start ? range.start : tStart;
-            const dispEnd   = tEnd   > range.end   ? range.end   : tEnd;
+            const dispEnd = tEndExclusive > range.end ? range.end : tEndExclusive;
 
-            if (dispStart >= range.end || dispEnd <= range.start) return;
+            if (dispStart >= range.end || dispEnd <= range.start) {
+                return;
+            }
 
-            const leftDays  = daysBetween(range.start, dispStart);
+            const leftDays = daysBetween(range.start, dispStart);
             const widthDays = daysBetween(dispStart, dispEnd);
-            if (widthDays <= 0) return;
+            if (widthDays <= 0) {
+                return;
+            }
 
             const bar = document.createElement('div');
-            bar.className   = 'gantt-bar gantt-bar--' + t.status;
-            bar.style.left  = pct(leftDays, totalDays);
+            bar.className = 'gantt-bar gantt-bar--' + t.status;
+            bar.style.left = pct(leftDays, totalDays);
             bar.style.width = pct(widthDays, totalDays);
-            bar.tabIndex    = 0;
+            bar.tabIndex = 0;
             bar.setAttribute('role', 'button');
             bar.setAttribute('aria-label', t.name + ' — ' + t.status);
-            bar.dataset.id  = t.id;
+            bar.dataset.id = t.id;
 
             const lbl = document.createElement('span');
-            lbl.className   = 'gantt-bar__label';
+            lbl.className = 'gantt-bar__label';
             lbl.textContent = t.name;
             bar.appendChild(lbl);
 
@@ -552,8 +578,8 @@ define(['core/ajax', 'core/notification', 'core/config'], function(Ajax, Notific
 
             bar.addEventListener('mouseenter', e => showTooltip(e, trainingTooltipHtml(t)));
             bar.addEventListener('mouseleave', hideTooltip);
-            bar.addEventListener('focus',      e => showTooltip(e, trainingTooltipHtml(t)));
-            bar.addEventListener('blur',       hideTooltip);
+            bar.addEventListener('focus', e => showTooltip(e, trainingTooltipHtml(t)));
+            bar.addEventListener('blur', hideTooltip);
 
             stripe.appendChild(bar);
         });

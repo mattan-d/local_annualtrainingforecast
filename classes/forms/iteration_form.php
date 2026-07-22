@@ -209,29 +209,33 @@ class iteration_form extends \moodleform {
             $errors['enddate'] = get_string('enddatebeforestartdate', 'local_annualtrainingforecast');
         }
 
-        $theoretical = !empty($data['theoreticalonly']);
-        $linkexisting = !empty($data['linkexisting']);
+        // Moodle-course fields (category / link) only exist when adding a new iteration.
+        $isadd = empty($this->_customdata['iteration']);
+        if ($isadd) {
+            $theoretical = !empty($data['theoreticalonly']);
+            $linkexisting = !empty($data['linkexisting']);
 
-        // Category only required when creating a new Moodle course
-        if (!$theoretical && !$linkexisting) {
-            if (empty($data['category'])) {
-                $errors['category'] = get_string('required');
-            } else {
-                try {
-                    $category = \core_course_category::get($data['category'], IGNORE_MISSING);
-                    if (!$category) {
+            // Category only required when creating a new Moodle course.
+            if (!$theoretical && !$linkexisting) {
+                if (empty($data['category'])) {
+                    $errors['category'] = get_string('required');
+                } else {
+                    try {
+                        $category = \core_course_category::get($data['category'], IGNORE_MISSING);
+                        if (!$category) {
+                            $errors['category'] = get_string('invalidcategoryid', 'error');
+                        } else if (!$category->can_create_course()) {
+                            $errors['category'] = get_string('nocreateincategory', 'error');
+                        }
+                    } catch (\Exception $e) {
                         $errors['category'] = get_string('invalidcategoryid', 'error');
-                    } else if (!$category->can_create_course()) {
-                        $errors['category'] = get_string('nocreateincategory', 'error');
                     }
-                } catch (\Exception $e) {
-                    $errors['category'] = get_string('invalidcategoryid', 'error');
                 }
             }
-        }
 
-        if ($linkexisting && empty($data['existingcourseid'])) {
-            $errors['existingcourseid'] = get_string('required');
+            if ($linkexisting && empty($data['existingcourseid'])) {
+                $errors['existingcourseid'] = get_string('required');
+            }
         }
 
         return $errors;

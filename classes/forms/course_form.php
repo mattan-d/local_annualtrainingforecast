@@ -53,6 +53,10 @@ class course_form extends \moodleform {
         $mform->addElement('select', 'coursesource', get_string('coursesource', 'local_annualtrainingforecast'), $courseOptions);
         $mform->setDefault('coursesource', 'new');
         $mform->addHelpButton('coursesource', 'coursesource', 'local_annualtrainingforecast');
+        // Source is chosen only when creating; freeze it on edit to avoid empty hidden fields.
+        if ($action === 'edit') {
+            $mform->freeze('coursesource');
+        }
 
         // New / theoretical course section
         $mform->addElement('header', 'newcoursehdr', get_string('newcoursedetails', 'local_annualtrainingforecast'));
